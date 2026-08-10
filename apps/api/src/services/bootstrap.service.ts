@@ -1,5 +1,6 @@
 import { UserRepository } from "../repositories/user.repository";
 import { SchoolRepository } from "../repositories/school.repository";
+import { getPermissionsForRole } from "../utils/permissions";
 
 export class BootstrapService {
   private userRepository = new UserRepository();
@@ -28,13 +29,12 @@ export class BootstrapService {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        role: user.role,
       },
       school: {
         id: school.id,
         name: school.name,
-        domain: school.domain,
+        code: school.code,
       },
       branding: school.branding,
       featureFlags: {
@@ -43,8 +43,9 @@ export class BootstrapService {
         exams: school.features?.exams ?? false,
         notices: school.features?.notices ?? false,
         remarks: school.features?.remarks ?? false,
+        timetable: school.features?.timetable ?? false,
       },
-      permissions: user.role.permissions.map((p) => p.name),
+      permissions: getPermissionsForRole(user.role),
       appVersion: {
         minimumSupportedVersion: minVersion,
         latestVersion: latestVersion,

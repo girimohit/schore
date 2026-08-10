@@ -1,6 +1,8 @@
 import { UserRepository } from "../repositories/user.repository";
 import { verifyPassword } from "../utils/password";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt";
+import { getPermissionsForRole } from "../utils/permissions";
+import { UserRole } from "@schore/database";
 
 export class AuthService {
   private userRepository = new UserRepository();
@@ -18,8 +20,8 @@ export class AuthService {
 
     const payload = {
       userId: user.id,
-      schoolId: user.schoolId,
-      role: user.role.name,
+      schoolId: user.schoolId || "",
+      role: user.role,
     };
 
     const accessToken = generateAccessToken(payload);
@@ -31,17 +33,31 @@ export class AuthService {
 
     await this.userRepository.createRefreshToken(user.id, refreshToken, expiresAt);
 
+    // Resolve name fields from profile relations
+    let firstName = "System";
+    let lastName = "Admin";
+    if (user.role === UserRole.FACULTY && user.faculty) {
+      firstName = user.faculty.firstName;
+      lastName = user.faculty.lastName || "";
+    } else if (user.role === UserRole.STUDENT && user.student) {
+      firstName = user.student.firstName;
+      lastName = user.student.lastName || "";
+    } else if (user.role === UserRole.SCHOOL_ADMIN) {
+      firstName = "School";
+      lastName = "Admin";
+    }
+
     return {
       accessToken,
       refreshToken,
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName,
+        lastName,
         schoolId: user.schoolId,
-        role: user.role.name,
-        permissions: user.role.permissions.map((p) => p.name),
+        role: user.role,
+        permissions: getPermissionsForRole(user.role),
       },
     };
   }
@@ -61,8 +77,8 @@ export class AuthService {
       const user = storedToken.user;
       const newPayload = {
         userId: user.id,
-        schoolId: user.schoolId,
-        role: user.role.name,
+        schoolId: user.schoolId || "",
+        role: user.role,
       };
 
       const newAccessToken = generateAccessToken(newPayload);

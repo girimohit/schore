@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       "User",
       authData.user.id,
       authData.user.id,
-      authData.user.schoolId,
+      authData.user.schoolId || undefined,
       { email }
     );
 

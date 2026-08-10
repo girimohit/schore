@@ -4,11 +4,9 @@ export interface CreateAuditLogInput {
   userId?: string;
   schoolId?: string;
   action: string;
-  entity: string;
+  entity?: string;
   entityId?: string;
-  payload?: any;
-  ipAddress?: string;
-  userAgent?: string;
+  metadata?: any;
 }
 
 export class AuditRepository {
@@ -18,11 +16,9 @@ export class AuditRepository {
         userId: data.userId || null,
         schoolId: data.schoolId || null,
         action: data.action,
-        entity: data.entity,
+        entity: data.entity || null,
         entityId: data.entityId || null,
-        payload: data.payload || undefined,
-        ipAddress: data.ipAddress || null,
-        userAgent: data.userAgent || null,
+        metadata: data.metadata || undefined,
       },
     });
   }
@@ -30,15 +26,14 @@ export class AuditRepository {
   async findBySchoolId(schoolId: string, limit = 50) {
     return prisma.auditLog.findMany({
       where: { schoolId },
-      orderBy: { timestamp: "desc" },
+      orderBy: { createdAt: "desc" },
       take: limit,
       include: {
         user: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            role: true,
           },
         },
       },

@@ -2,15 +2,12 @@ import { prisma } from "@schore/database";
 
 export class UserRepository {
   async findByEmail(email: string) {
-    return prisma.user.findUnique({
+    return prisma.user.findFirst({
       where: { email },
       include: {
-        role: {
-          include: {
-            permissions: true,
-          },
-        },
         school: true,
+        faculty: true,
+        student: true,
       },
     });
   }
@@ -19,12 +16,9 @@ export class UserRepository {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        role: {
-          include: {
-            permissions: true,
-          },
-        },
         school: true,
+        faculty: true,
+        student: true,
       },
     });
   }
@@ -45,12 +39,9 @@ export class UserRepository {
       include: {
         user: {
           include: {
-            role: {
-              include: {
-                permissions: true,
-              },
-            },
             school: true,
+            faculty: true,
+            student: true,
           },
         },
       },

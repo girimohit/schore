@@ -1,0 +1,52 @@
+import { UserRole } from "@schore/database";
+
+export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  [UserRole.SUPER_ADMIN]: [
+    "school:read", "school:write",
+    "user:read", "user:create", "user:update", "user:delete",
+    "branding:read", "branding:write",
+    "features:read", "features:write",
+    "audit:read",
+    "attendance:read", "attendance:write",
+    "homework:read", "homework:write",
+    "exams:read", "exams:write",
+    "timetable:read", "timetable:write",
+    "notices:read", "notices:write",
+    "remarks:read", "remarks:write"
+  ],
+  [UserRole.SCHOOL_ADMIN]: [
+    "school:read", "school:write",
+    "user:read", "user:create", "user:update", "user:delete",
+    "branding:read", "branding:write",
+    "features:read",
+    "attendance:read", "attendance:write",
+    "homework:read", "homework:write",
+    "exams:read", "exams:write",
+    "timetable:read", "timetable:write",
+    "notices:read", "notices:write",
+    "remarks:read", "remarks:write"
+  ],
+  [UserRole.FACULTY]: [
+    "school:read",
+    "user:read",
+    "attendance:read", "attendance:write",
+    "homework:read", "homework:write",
+    "exams:write",
+    "timetable:read",
+    "notices:read",
+    "remarks:read", "remarks:write"
+  ],
+  [UserRole.STUDENT]: [
+    "school:read",
+    "attendance:read",
+    "homework:read", "homework:submit",
+    "exams:read",
+    "timetable:read",
+    "notices:read",
+    "remarks:read"
+  ]
+};
+
+export function getPermissionsForRole(role: UserRole): string[] {
+  return ROLE_PERMISSIONS[role] || [];
+}
