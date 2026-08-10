@@ -44,6 +44,13 @@ export async function middleware(request: NextRequest) {
     }
 
     const token = authHeader.split(" ")[1];
+    if (!token) {
+      return new NextResponse(
+        JSON.stringify({ success: false, message: "Unauthorized: Missing token" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     try {
       const secret = new TextEncoder().encode(
         process.env.JWT_ACCESS_SECRET || "default_access_secret_change_me_in_production"

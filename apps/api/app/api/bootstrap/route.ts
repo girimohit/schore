@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { BootstrapService } from "../../../../src/services/bootstrap.service";
-import { ApiResponse } from "../../../../src/utils/response";
+import { BootstrapService } from "../../../src/services/bootstrap.service";
+import { ApiResponse } from "../../../src/utils/response";
 
 export async function GET(req: NextRequest) {
   try {
