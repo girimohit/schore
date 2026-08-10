@@ -27,7 +27,7 @@ class ThemeBuilder {
 
       textTheme: textTheme,
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: scheme.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -43,9 +43,6 @@ class ThemeBuilder {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        border: Border(
-          bottom: BorderSide(color: scheme.border, width: 1),
-        ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
