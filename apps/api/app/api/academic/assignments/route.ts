@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
       return ApiResponse.forbidden("Only administrators can assign academic resources");
-    }
+    } 
 
     const body = await req.url ? await req.json() : {};
     const { type, ...payload } = body;
