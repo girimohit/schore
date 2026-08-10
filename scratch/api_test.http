@@ -1,0 +1,47 @@
+### 1. Test App Version Compatibility (Should fail with 426 Upgrade Required)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+X-App-Version: 0.9.0
+
+{
+  "email": "superadmin@schore.com",
+  "password": "Admin@123"
+}
+
+### 2. Login (Should succeed and return access + refresh tokens)
+# @name login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+X-App-Version: 1.0.0
+
+{
+  "email": "superadmin@schore.com",
+  "password": "Admin@123"
+}
+
+### Keep the access token and refresh token from the login response.
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+### 3. Bootstrap API (Should succeed using the access token and resolve multi-tenancy context)
+GET http://localhost:3000/api/bootstrap
+Authorization: Bearer {{accessToken}}
+X-App-Version: 1.0.0
+
+### 4. Refresh Tokens (Should succeed and return new access + refresh tokens)
+POST http://localhost:3000/api/auth/refresh
+Content-Type: application/json
+X-App-Version: 1.0.0
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 5. Logout (Should succeed and revoke the session)
+POST http://localhost:3000/api/auth/logout
+Content-Type: application/json
+X-App-Version: 1.0.0
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
