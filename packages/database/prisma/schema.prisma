@@ -1,0 +1,121 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branding  SchoolBranding?
+  features  SchoolFeatures?
+  users     User[]
+  auditLogs AuditLog[]
+}
+
+model SchoolBranding {
+  id             String   @id @default(uuid())
+  schoolId       String   @unique
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolName     String
+  appName        String
+  logoUrl        String?
+  primaryColor   String   @default("#6366F1")
+  secondaryColor String   @default("#4F46E5")
+  themeMode      String   @default("LIGHT") // LIGHT, DARK, SYSTEM
+  font           String   @default("Inter")
+  splashImageUrl String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SchoolFeatures {
+  id         String   @id @default(uuid())
+  schoolId   String   @unique
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  attendance Boolean  @default(true)
+  homework   Boolean  @default(true)
+  exams      Boolean  @default(true)
+  notices    Boolean  @default(true)
+  remarks    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  schoolId     String
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  roleId       String
+  role         Role           @relation(fields: [roleId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([schoolId])
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // Super Admin, School Admin, Faculty, Student
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  permissions Permission[] @relation("RolePermissions")
+  users       User[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "school:write", "branding:read", "user:create"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles Role[] @relation("RolePermissions")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  action    String
+  entity    String
+  entityId  String?
+  payload   Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([userId])
+}
