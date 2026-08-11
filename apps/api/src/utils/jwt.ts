@@ -28,3 +28,23 @@ export function verifyAccessToken(token: string): JwtPayload {
 export function verifyRefreshToken(token: string): JwtPayload {
   return jwt.verify(token, REFRESH_SECRET) as JwtPayload;
 }
+
+export function generateInvitationToken(payload: {
+  userId: string;
+  schoolId: string;
+  email: string;
+}): string {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: "7d" });
+}
+
+export function verifyInvitationToken(token: string): {
+  userId: string;
+  schoolId: string;
+  email: string;
+} {
+  return jwt.verify(token, ACCESS_SECRET) as {
+    userId: string;
+    schoolId: string;
+    email: string;
+  };
+}
