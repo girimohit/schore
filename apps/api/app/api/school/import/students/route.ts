@@ -190,6 +190,19 @@ export async function POST(req: NextRequest) {
         });
       }
     }
+    await prisma.auditLog.create({
+      data: {
+        schoolId,
+        userId: req.headers.get("x-user-id") || null,
+        action: "STUDENT_IMPORT",
+        entity: "Student",
+        metadata: {
+          successCount,
+          failureCount,
+          fileName: file.name,
+        },
+      },
+    });
 
     return ApiResponse.success(
       {
