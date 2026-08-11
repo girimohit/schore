@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/spacing.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
+import '../bootstrap/bootstrap_notifier.dart';
 
 class FacultyScreen extends ConsumerStatefulWidget {
   const FacultyScreen({super.key});
@@ -267,7 +268,7 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
                           );
                           _fetchFaculty();
                         }
-                      } catch (err: any) {
+                      } catch (err) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to save faculty: ${err.toString()}')),
                         );
@@ -365,7 +366,7 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
                               );
                               _fetchFaculty();
                             }
-                          } catch (err: any) {
+                          } catch (err) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Import failed: ${err.toString()}')),
                             );
