@@ -248,4 +248,60 @@ export class SchoolService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  async updateSchoolStatus(
+    id: string,
+    status: "ACTIVE" | "SUSPENDED" | "INACTIVE",
+    actorId: string,
+  ) {
+    const school = await prisma.school.findUnique({ where: { id } });
+    if (!school) {
+      throw new Error("School not found");
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const sch = await tx.school.update({
+        where: { id },
+        data: { status },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          schoolId: id,
+          userId: actorId,
+          action: `SCHOOL_${status}`,
+          entity: "School",
+          entityId: id,
+          metadata: {
+            previousStatus: school.status,
+            newStatus: status,
+          },
+        },
+      });
+
+      return sch;
+    });
+
+    return updated;
+  }
+
+  async updateSchoolDetails(
+    id: string,
+    data: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+    },
+  ) {
+    const school = await prisma.school.findUnique({ where: { id } });
+    if (!school) {
+      throw new Error("School not found");
+    }
+
+    return prisma.school.update({
+      where: { id },
+      data,
+    });
+  }
 }
