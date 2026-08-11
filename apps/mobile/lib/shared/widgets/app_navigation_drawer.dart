@@ -77,6 +77,14 @@ class AppNavigationDrawer extends ConsumerWidget {
                 context.go('/faculty');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.settings_suggest_outlined),
+              title: const Text('Academic Setup'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/academic-settings');
+              },
+            ),
           ],
 
           // FEATURE-FLAGGED Modules
