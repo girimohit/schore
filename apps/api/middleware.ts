@@ -52,68 +52,51 @@ async function handleMiddleware(request: NextRequest) {
   const deviceType = request.headers.get("x-device-type") || "android";
 
   if (appVersion) {
-    try {
-      // Fetch platform configuration from db-backed config endpoint internally
-      const configUrl = new URL("/api/admin/config", request.url);
-      const res = await fetch(configUrl, {
-        headers: {
-          "x-user-role": "SUPER_ADMIN",
-          "x-user-id": "middleware-internal",
-          "x-internal-request": "true",
-        },
-      });
-      const configData = await res.json();
+    const isDev = process.env.NODE_ENV === "development";
+    let minSupportedVersion = process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0";
+    let latestVersion = process.env.LATEST_APP_VERSION || "1.0.0";
 
-      if (configData.success && configData.data) {
-        const platformConfig = configData.data;
-        const isIos = deviceType.toLowerCase() === "ios";
-        const minSupportedVersion = isIos
-          ? platformConfig.minIosVersion
-          : platformConfig.minAndroidVersion;
-        const latestVersion = isIos
-          ? platformConfig.latestIosVersion
-          : platformConfig.latestAndroidVersion;
-
-        if (!isVersionCompatible(appVersion, minSupportedVersion)) {
-          return new NextResponse(
-            JSON.stringify({
-              success: false,
-              message: "A newer version of the app is required. Please update.",
-              code: "FORCE_UPDATE",
-              minimumSupportedVersion: minSupportedVersion,
-              latestVersion,
-            }),
-            {
-              status: 426,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-      }
-    } catch (error) {
-      console.error(
-        "Middleware platform config fetch failed, falling back to ENV:",
-        error,
-      );
-      const minSupportedVersion =
-        process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0";
-      const latestVersion = process.env.LATEST_APP_VERSION || "1.0.0";
-
-      if (!isVersionCompatible(appVersion, minSupportedVersion)) {
-        return new NextResponse(
-          JSON.stringify({
-            success: false,
-            message: "A newer version of the app is required. Please update.",
-            code: "FORCE_UPDATE",
-            minimumSupportedVersion: minSupportedVersion,
-            latestVersion,
-          }),
-          {
-            status: 426,
-            headers: { "Content-Type": "application/json" },
+    if (!isDev) {
+      try {
+        const configUrl = new URL("/api/admin/config", request.url);
+        const res = await fetch(configUrl, {
+          headers: {
+            "x-user-role": "SUPER_ADMIN",
+            "x-user-id": "middleware-internal",
+            "x-internal-request": "true",
           },
-        );
+        });
+        const configData = await res.json();
+
+        if (configData.success && configData.data) {
+          const platformConfig = configData.data;
+          const isIos = deviceType.toLowerCase() === "ios";
+          minSupportedVersion = isIos
+            ? platformConfig.minIosVersion
+            : platformConfig.minAndroidVersion;
+          latestVersion = isIos
+            ? platformConfig.latestIosVersion
+            : platformConfig.latestAndroidVersion;
+        }
+      } catch (error) {
+        console.error("Middleware platform config fetch failed:", error);
       }
+    }
+
+    if (!isVersionCompatible(appVersion, minSupportedVersion)) {
+      return new NextResponse(
+        JSON.stringify({
+          success: false,
+          message: "A newer version of the app is required. Please update.",
+          code: "FORCE_UPDATE",
+          minimumSupportedVersion: minSupportedVersion,
+          latestVersion,
+        }),
+        {
+          status: 426,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
   }
 
@@ -169,6 +152,7 @@ async function handleMiddleware(request: NextRequest) {
         },
       });
     } catch (err) {
+      console.error("JWT Verification failed:", err);
       return new NextResponse(
         JSON.stringify({
           success: false,
