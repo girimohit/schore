@@ -7,6 +7,8 @@ import '../../features/bootstrap/bootstrap_notifier.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/bootstrap/bootstrap_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/students/students_screen.dart';
+import '../../features/faculty/faculty_screen.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 
 // Shell Navigation screens placeholder.
@@ -73,11 +75,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/students',
-        builder: (context, state) => const PlaceholderScreen(title: 'Students Management'),
+        builder: (context, state) => const StudentsScreen(),
       ),
       GoRoute(
         path: '/faculty',
-        builder: (context, state) => const PlaceholderScreen(title: 'Faculty Management'),
+        builder: (context, state) => const FacultyScreen(),
       ),
       GoRoute(
         path: '/attendance',
