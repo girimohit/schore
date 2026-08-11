@@ -3,6 +3,38 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
+  // CORS Preflight request
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, x-app-version, x-device-type, x-user-role, x-user-id, x-school-id, x-tenant-id",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  const response = await handleMiddleware(request);
+
+  // Attach CORS headers to standard response
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+  );
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-app-version, x-device-type, x-user-role, x-user-id, x-school-id, x-tenant-id",
+  );
+
+  return response;
+}
+
+async function handleMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Bypass check for internal API requests to avoid infinite recursion loops
