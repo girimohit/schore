@@ -135,7 +135,7 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                       ],
 
                       // TEACHER GRADING INTERFACE
-                      if (role == 'FACULTY' || role == 'ADMIN' || role == 'SUPERADMIN') ...[
+                      if (role == 'FACULTY' || role == 'ADMIN' || role == 'SUPERADMIN' || role == 'SCHOOL_ADMIN') ...[
                         const Divider(),
                         AppSpacing.heightM,
                         const Text(

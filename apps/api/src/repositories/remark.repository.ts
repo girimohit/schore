@@ -67,4 +67,29 @@ export class RemarkRepository {
       orderBy: { createdAt: "desc" },
     });
   }
+
+  async findAll(schoolId: string) {
+    return prisma.studentRemark.findMany({
+      where: {
+        schoolId,
+      },
+      include: {
+        faculty: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }

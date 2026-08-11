@@ -36,7 +36,7 @@ class DashboardScreen extends ConsumerWidget {
             AppSpacing.heightL,
 
             // Role-based main dashboard body
-            if (role == 'ADMIN' || role == 'SUPERADMIN')
+            if (role == 'ADMIN' || role == 'SUPERADMIN' || role == 'SCHOOL_ADMIN')
               _buildAdminDashboard(context)
             else if (role == 'FACULTY')
               _buildFacultyDashboard(context)

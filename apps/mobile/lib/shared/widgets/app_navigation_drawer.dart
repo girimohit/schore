@@ -60,7 +60,7 @@ class AppNavigationDrawer extends ConsumerWidget {
           ),
           
           // ADMIN-ONLY Modules
-          if (role == 'ADMIN' || role == 'SUPERADMIN') ...[
+          if (role == 'ADMIN' || role == 'SUPERADMIN' || role == 'SCHOOL_ADMIN') ...[
             ListTile(
               leading: const Icon(Icons.people_outline),
               title: const Text('Students'),
@@ -110,7 +110,7 @@ class AppNavigationDrawer extends ConsumerWidget {
               },
             ),
 
-          if (flags.exams && (role == 'ADMIN' || role == 'SUPERADMIN'))
+          if (flags.exams && (role == 'ADMIN' || role == 'SUPERADMIN' || role == 'SCHOOL_ADMIN'))
             ListTile(
               leading: const Icon(Icons.quiz_outlined),
               title: const Text('Exams'),

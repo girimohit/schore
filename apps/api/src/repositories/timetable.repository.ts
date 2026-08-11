@@ -138,4 +138,19 @@ export class TimetableRepository {
       },
     });
   }
+
+  async findAll(schoolId: string) {
+    return prisma.timetable.findMany({
+      where: {
+        schoolId,
+      },
+      include: {
+        class: true,
+        section: true,
+        subject: true,
+        faculty: true,
+      },
+      orderBy: [{ dayOfWeek: "asc" }, { period: "asc" }],
+    });
+  }
 }

@@ -16,8 +16,22 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type"); // "class" or "faculty"
+    let type = searchParams.get("type"); // "class" or "faculty"
     const timetableService = new TimetableService();
+
+    if (!type) {
+      if (role === UserRole.STUDENT) {
+        type = "class";
+      } else if (role === UserRole.FACULTY) {
+        type = "faculty";
+      } else {
+        const data = await timetableService.getAllTimetable(schoolId);
+        return ApiResponse.success(
+          data,
+          "Timetable entries retrieved successfully",
+        );
+      }
+    }
 
     if (type === "class") {
       let classId = searchParams.get("classId");

@@ -108,4 +108,9 @@ export class RemarkService {
     await enforceEntitlement(schoolId, "remarks");
     return this.remarkRepository.findForStudent(schoolId, studentId);
   }
+
+  async getAllRemarks(schoolId: string) {
+    await enforceEntitlement(schoolId, "remarks");
+    return this.remarkRepository.findAll(schoolId);
+  }
 }

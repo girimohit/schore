@@ -15,8 +15,16 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type"); // "section" or "student"
+    let type = searchParams.get("type"); // "section" or "student"
+    let studentId = searchParams.get("studentId");
     const attendanceService = new AttendanceService();
+
+    if (!type && role === UserRole.STUDENT) {
+      type = "student";
+      const studentService = new StudentService();
+      const student = await studentService.getStudentByUserId(schoolId, userId);
+      studentId = student.id;
+    }
 
     if (type === "section") {
       const sectionId = searchParams.get("sectionId");
@@ -48,7 +56,6 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === "student") {
-      const studentId = searchParams.get("studentId");
       if (!studentId) {
         return ApiResponse.badRequest("Missing studentId parameter");
       }

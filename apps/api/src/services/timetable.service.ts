@@ -154,4 +154,9 @@ export class TimetableService {
     await enforceEntitlement(schoolId, "timetable");
     return this.timetableRepository.findForFaculty(schoolId, facultyId);
   }
+
+  async getAllTimetable(schoolId: string) {
+    await enforceEntitlement(schoolId, "timetable");
+    return this.timetableRepository.findAll(schoolId);
+  }
 }
