@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
     const data = await academicService.getAcademicYears(schoolId);
     return ApiResponse.success(data, "Academic years retrieved successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to load academic years");
+    return ApiResponse.badRequest(
+      error.message || "Failed to load academic years",
+    );
   }
 }
 
@@ -28,7 +30,9 @@ export async function POST(req: NextRequest) {
 
     // RBAC: Only Super Admin and School Admin can manage academic structure
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can manage academic years");
+      return ApiResponse.forbidden(
+        "Only administrators can manage academic years",
+      );
     }
 
     const body = await req.json();
@@ -37,6 +41,8 @@ export async function POST(req: NextRequest) {
 
     return ApiResponse.success(data, "Academic year created successfully", 201);
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to create academic year");
+    return ApiResponse.badRequest(
+      error.message || "Failed to create academic year",
+    );
   }
 }

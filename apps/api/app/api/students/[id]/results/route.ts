@@ -6,7 +6,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -24,12 +24,20 @@ export async function GET(
     // Access Checks: Students view their own results, Faculty view assigned class students
     if (role === UserRole.STUDENT) {
       if (student.userId !== userId) {
-        return ApiResponse.forbidden("Students can only view their own exam results");
+        return ApiResponse.forbidden(
+          "Students can only view their own exam results",
+        );
       }
     } else if (role === UserRole.FACULTY) {
-      const hasAccess = await studentService.checkFacultyAccess(schoolId, id, userId);
+      const hasAccess = await studentService.checkFacultyAccess(
+        schoolId,
+        id,
+        userId,
+      );
       if (!hasAccess) {
-        return ApiResponse.forbidden("Faculty can only view results of students in their assigned classes");
+        return ApiResponse.forbidden(
+          "Faculty can only view results of students in their assigned classes",
+        );
       }
     }
 
@@ -38,6 +46,8 @@ export async function GET(
 
     return ApiResponse.success(data, "Student results retrieved successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to load student results");
+    return ApiResponse.badRequest(
+      error.message || "Failed to load student results",
+    );
   }
 }

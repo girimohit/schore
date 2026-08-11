@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -23,17 +23,24 @@ export async function GET(
 
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
-    const data = await homeworkService.getHomeworkSubmissions(schoolId, id, userId, isFaculty);
+    const data = await homeworkService.getHomeworkSubmissions(
+      schoolId,
+      id,
+      userId,
+      isFaculty,
+    );
 
     return ApiResponse.success(data, "Submissions list retrieved successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to load submissions");
+    return ApiResponse.badRequest(
+      error.message || "Failed to load submissions",
+    );
   }
 }
 
 export async function POST(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -51,7 +58,12 @@ export async function POST(
 
     const body = await req.json();
     const homeworkService = new HomeworkService();
-    const data = await homeworkService.submitHomework(schoolId, id, userId, body);
+    const data = await homeworkService.submitHomework(
+      schoolId,
+      id,
+      userId,
+      body,
+    );
 
     return ApiResponse.success(data, "Homework submitted successfully", 201);
   } catch (error: any) {

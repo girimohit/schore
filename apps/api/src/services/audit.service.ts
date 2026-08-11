@@ -1,4 +1,7 @@
-import { AuditRepository, CreateAuditLogInput } from "../repositories/audit.repository";
+import {
+  AuditRepository,
+  CreateAuditLogInput,
+} from "../repositories/audit.repository";
 import { NextRequest } from "next/server";
 
 export class AuditService {
@@ -19,7 +22,7 @@ export class AuditService {
     entityId?: string,
     userId?: string,
     schoolId?: string,
-    metadata?: any
+    metadata?: any,
   ) {
     return this.log({
       userId,

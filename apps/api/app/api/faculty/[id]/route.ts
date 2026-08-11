@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -23,13 +23,20 @@ export async function GET(
     // RBAC: Faculty can only read their own profile; students are forbidden
     if (role === UserRole.FACULTY) {
       if (faculty.userId !== userId) {
-        return ApiResponse.forbidden("Faculty members can only view their own profiles");
+        return ApiResponse.forbidden(
+          "Faculty members can only view their own profiles",
+        );
       }
     } else if (role === UserRole.STUDENT) {
-      return ApiResponse.forbidden("Students cannot view faculty profile details");
+      return ApiResponse.forbidden(
+        "Students cannot view faculty profile details",
+      );
     }
 
-    return ApiResponse.success(faculty, "Faculty details retrieved successfully");
+    return ApiResponse.success(
+      faculty,
+      "Faculty details retrieved successfully",
+    );
   } catch (error: any) {
     return ApiResponse.notFound(error.message || "Faculty profile not found");
   }
@@ -37,7 +44,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -49,7 +56,9 @@ export async function PUT(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can update faculty profiles");
+      return ApiResponse.forbidden(
+        "Only administrators can update faculty profiles",
+      );
     }
 
     const body = await req.json();
@@ -58,6 +67,8 @@ export async function PUT(
 
     return ApiResponse.success(data, "Faculty profile updated successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to update faculty profile");
+    return ApiResponse.badRequest(
+      error.message || "Failed to update faculty profile",
+    );
   }
 }

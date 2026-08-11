@@ -1,14 +1,17 @@
 import { prisma, AttendanceStatus } from "@schore/database";
 
 export class AttendanceRepository {
-  async markAttendance(schoolId: string, data: {
-    studentId: string;
-    sectionId: string;
-    date: Date;
-    status: AttendanceStatus;
-    markedById: string;
-    note?: string;
-  }) {
+  async markAttendance(
+    schoolId: string,
+    data: {
+      studentId: string;
+      sectionId: string;
+      date: Date;
+      status: AttendanceStatus;
+      markedById: string;
+      note?: string;
+    },
+  ) {
     // Standardize date to ignore time components (midnight UTC)
     const attendanceDate = new Date(data.date);
     attendanceDate.setUTCHours(0, 0, 0, 0);
@@ -37,7 +40,11 @@ export class AttendanceRepository {
     });
   }
 
-  async findDailyAttendanceBySection(schoolId: string, sectionId: string, date: Date) {
+  async findDailyAttendanceBySection(
+    schoolId: string,
+    sectionId: string,
+    date: Date,
+  ) {
     const attendanceDate = new Date(date);
     attendanceDate.setUTCHours(0, 0, 0, 0);
 
@@ -65,7 +72,12 @@ export class AttendanceRepository {
     });
   }
 
-  async findStudentAttendance(schoolId: string, studentId: string, startDate?: Date, endDate?: Date) {
+  async findStudentAttendance(
+    schoolId: string,
+    studentId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
     return prisma.attendance.findMany({
       where: {
         schoolId,
@@ -128,7 +140,10 @@ export class AttendanceRepository {
   }
 
   // Verify if a teacher is assigned to a section
-  async isFacultyAssignedToSection(facultyId: string, sectionId: string): Promise<boolean> {
+  async isFacultyAssignedToSection(
+    facultyId: string,
+    sectionId: string,
+  ): Promise<boolean> {
     const section = await prisma.section.findUnique({
       where: { id: sectionId },
       select: { classId: true },
@@ -140,10 +155,7 @@ export class AttendanceRepository {
       where: {
         facultyId,
         classId: section.classId,
-        OR: [
-          { sectionId: null },
-          { sectionId },
-        ],
+        OR: [{ sectionId: null }, { sectionId }],
       },
     });
 

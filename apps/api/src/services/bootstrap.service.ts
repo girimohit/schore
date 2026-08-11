@@ -6,7 +6,11 @@ export class BootstrapService {
   private userRepository = new UserRepository();
   private schoolRepository = new SchoolRepository();
 
-  async getBootstrapData(userId: string, schoolId: string, appVersion: string | null) {
+  async getBootstrapData(
+    userId: string,
+    schoolId: string,
+    appVersion: string | null,
+  ) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new Error("User not found");
@@ -19,7 +23,7 @@ export class BootstrapService {
 
     const minVersion = process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0";
     const latestVersion = process.env.LATEST_APP_VERSION || "1.0.0";
-    
+
     let forceUpdate = false;
     if (appVersion) {
       forceUpdate = !this.isVersionCompatible(appVersion, minVersion);

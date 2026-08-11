@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -25,7 +25,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -45,7 +45,12 @@ export async function PUT(
     const noticeService = new NoticeService();
     const isFaculty = role === UserRole.FACULTY;
 
-    const data = await noticeService.updateNotice(schoolId, id, isFaculty, body);
+    const data = await noticeService.updateNotice(
+      schoolId,
+      id,
+      isFaculty,
+      body,
+    );
 
     return ApiResponse.success(data, "Notice updated successfully");
   } catch (error: any) {
@@ -55,7 +60,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;

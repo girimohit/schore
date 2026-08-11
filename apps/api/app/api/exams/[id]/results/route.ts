@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -18,22 +18,31 @@ export async function GET(
     }
 
     if (role === UserRole.STUDENT) {
-      return ApiResponse.forbidden("Students cannot list exam results of other students");
+      return ApiResponse.forbidden(
+        "Students cannot list exam results of other students",
+      );
     }
 
     const examService = new ExamService();
     const isFaculty = role === UserRole.FACULTY;
-    const data = await examService.getExamResults(schoolId, id, userId, isFaculty);
+    const data = await examService.getExamResults(
+      schoolId,
+      id,
+      userId,
+      isFaculty,
+    );
 
     return ApiResponse.success(data, "Exam results retrieved successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to load exam results");
+    return ApiResponse.badRequest(
+      error.message || "Failed to load exam results",
+    );
   }
 }
 
 export async function POST(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -53,10 +62,18 @@ export async function POST(
     const examService = new ExamService();
     const isFaculty = role === UserRole.FACULTY;
 
-    const data = await examService.recordResultsBatch(schoolId, id, userId, isFaculty, body);
+    const data = await examService.recordResultsBatch(
+      schoolId,
+      id,
+      userId,
+      isFaculty,
+      body,
+    );
 
     return ApiResponse.success(data, "Exam results recorded successfully", 201);
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to record exam results");
+    return ApiResponse.badRequest(
+      error.message || "Failed to record exam results",
+    );
   }
 }

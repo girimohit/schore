@@ -1,6 +1,10 @@
 import { UserRepository } from "../repositories/user.repository";
 import { verifyPassword } from "../utils/password";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt";
 import { getPermissionsForRole } from "../utils/permissions";
 import { UserRole } from "@schore/database";
 
@@ -31,7 +35,11 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await this.userRepository.createRefreshToken(user.id, refreshToken, expiresAt);
+    await this.userRepository.createRefreshToken(
+      user.id,
+      refreshToken,
+      expiresAt,
+    );
 
     // Resolve name fields from profile relations
     let firstName = "System";
@@ -65,9 +73,13 @@ export class AuthService {
   async refresh(token: string) {
     try {
       const payload = verifyRefreshToken(token);
-      
+
       const storedToken = await this.userRepository.findRefreshToken(token);
-      if (!storedToken || storedToken.revokedAt || storedToken.expiresAt < new Date()) {
+      if (
+        !storedToken ||
+        storedToken.revokedAt ||
+        storedToken.expiresAt < new Date()
+      ) {
         throw new Error("Invalid or expired refresh token");
       }
 
@@ -87,7 +99,11 @@ export class AuthService {
       // Save new refresh token
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
-      await this.userRepository.createRefreshToken(user.id, newRefreshToken, expiresAt);
+      await this.userRepository.createRefreshToken(
+        user.id,
+        newRefreshToken,
+        expiresAt,
+      );
 
       return {
         accessToken: newAccessToken,

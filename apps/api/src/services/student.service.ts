@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { StudentRepository, FindStudentsOptions } from "../repositories/student.repository";
+import {
+  StudentRepository,
+  FindStudentsOptions,
+} from "../repositories/student.repository";
 import { Gender, StudentStatus } from "@schore/database";
 
 const genderEnum = z.nativeEnum(Gender);
@@ -81,11 +84,27 @@ export class StudentService {
     return this.studentRepository.findStudents(schoolId, options);
   }
 
-  async searchStudentsForFaculty(schoolId: string, facultyId: string, options: FindStudentsOptions) {
-    return this.studentRepository.findStudentsForFaculty(schoolId, facultyId, options);
+  async searchStudentsForFaculty(
+    schoolId: string,
+    facultyId: string,
+    options: FindStudentsOptions,
+  ) {
+    return this.studentRepository.findStudentsForFaculty(
+      schoolId,
+      facultyId,
+      options,
+    );
   }
 
-  async checkFacultyAccess(schoolId: string, studentId: string, facultyId: string): Promise<boolean> {
-    return this.studentRepository.checkFacultyAccess(schoolId, studentId, facultyId);
+  async checkFacultyAccess(
+    schoolId: string,
+    studentId: string,
+    facultyId: string,
+  ): Promise<boolean> {
+    return this.studentRepository.checkFacultyAccess(
+      schoolId,
+      studentId,
+      facultyId,
+    );
   }
 }

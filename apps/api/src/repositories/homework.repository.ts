@@ -1,16 +1,20 @@
 import { prisma, SubmissionStatus } from "@schore/database";
 
 export class HomeworkRepository {
-  async createHomework(schoolId: string, facultyId: string, data: {
-    classId: string;
-    sectionId: string;
-    subjectId: string;
-    title: string;
-    description?: string;
-    attachmentUrl?: string;
-    dueDate: Date;
-    academicYearId: string; // needed to find enrolled students
-  }) {
+  async createHomework(
+    schoolId: string,
+    facultyId: string,
+    data: {
+      classId: string;
+      sectionId: string;
+      subjectId: string;
+      title: string;
+      description?: string;
+      attachmentUrl?: string;
+      dueDate: Date;
+      academicYearId: string; // needed to find enrolled students
+    },
+  ) {
     return prisma.$transaction(async (tx) => {
       // 1. Create Homework
       const homework = await tx.homework.create({
@@ -54,12 +58,16 @@ export class HomeworkRepository {
     });
   }
 
-  async updateHomework(schoolId: string, id: string, data: {
-    title?: string;
-    description?: string;
-    attachmentUrl?: string;
-    dueDate?: Date;
-  }) {
+  async updateHomework(
+    schoolId: string,
+    id: string,
+    data: {
+      title?: string;
+      description?: string;
+      attachmentUrl?: string;
+      dueDate?: Date;
+    },
+  ) {
     return prisma.homework.update({
       where: { id, schoolId },
       data,
@@ -84,12 +92,15 @@ export class HomeworkRepository {
     });
   }
 
-  async findHomeworkList(schoolId: string, options: {
-    classId?: string;
-    sectionId?: string;
-    subjectId?: string;
-    facultyId?: string;
-  }) {
+  async findHomeworkList(
+    schoolId: string,
+    options: {
+      classId?: string;
+      sectionId?: string;
+      subjectId?: string;
+      facultyId?: string;
+    },
+  ) {
     return prisma.homework.findMany({
       where: {
         schoolId,
@@ -160,7 +171,11 @@ export class HomeworkRepository {
     });
   }
 
-  async submitHomework(homeworkId: string, studentId: string, contentUrl: string) {
+  async submitHomework(
+    homeworkId: string,
+    studentId: string,
+    contentUrl: string,
+  ) {
     const homework = await prisma.homework.findUnique({
       where: { id: homeworkId },
       select: { dueDate: true },
@@ -188,8 +203,14 @@ export class HomeworkRepository {
     });
   }
 
-  async reviewSubmission(submissionId: string, feedback: string, isApproved: boolean) {
-    const status = isApproved ? SubmissionStatus.REVIEWED : SubmissionStatus.ASSIGNED;
+  async reviewSubmission(
+    submissionId: string,
+    feedback: string,
+    isApproved: boolean,
+  ) {
+    const status = isApproved
+      ? SubmissionStatus.REVIEWED
+      : SubmissionStatus.ASSIGNED;
 
     return prisma.homeworkSubmission.update({
       where: { id: submissionId },

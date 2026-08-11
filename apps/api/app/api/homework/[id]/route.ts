@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -19,13 +19,15 @@ export async function GET(
 
     return ApiResponse.success(data, "Homework details retrieved successfully");
   } catch (error: any) {
-    return ApiResponse.notFound(error.message || "Homework assignment not found");
+    return ApiResponse.notFound(
+      error.message || "Homework assignment not found",
+    );
   }
 }
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -38,24 +40,37 @@ export async function PUT(
     }
 
     if (role === UserRole.STUDENT) {
-      return ApiResponse.forbidden("Students cannot update homework assignments");
+      return ApiResponse.forbidden(
+        "Students cannot update homework assignments",
+      );
     }
 
     const body = await req.json();
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
-    const data = await homeworkService.updateHomework(schoolId, id, userId, isFaculty, body);
+    const data = await homeworkService.updateHomework(
+      schoolId,
+      id,
+      userId,
+      isFaculty,
+      body,
+    );
 
-    return ApiResponse.success(data, "Homework assignment updated successfully");
+    return ApiResponse.success(
+      data,
+      "Homework assignment updated successfully",
+    );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to update homework assignment");
+    return ApiResponse.badRequest(
+      error.message || "Failed to update homework assignment",
+    );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -68,7 +83,9 @@ export async function DELETE(
     }
 
     if (role === UserRole.STUDENT) {
-      return ApiResponse.forbidden("Students cannot delete homework assignments");
+      return ApiResponse.forbidden(
+        "Students cannot delete homework assignments",
+      );
     }
 
     const homeworkService = new HomeworkService();
@@ -76,8 +93,13 @@ export async function DELETE(
 
     await homeworkService.deleteHomework(schoolId, id, userId, isFaculty);
 
-    return ApiResponse.success(null, "Homework assignment deleted successfully");
+    return ApiResponse.success(
+      null,
+      "Homework assignment deleted successfully",
+    );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to delete homework assignment");
+    return ApiResponse.badRequest(
+      error.message || "Failed to delete homework assignment",
+    );
   }
 }

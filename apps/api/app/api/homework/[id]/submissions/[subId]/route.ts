@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string; subId: string }> }
+  props: { params: Promise<{ id: string; subId: string }> },
 ) {
   try {
     const { id, subId } = await props.params;
@@ -25,10 +25,19 @@ export async function PUT(
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
-    const data = await homeworkService.reviewSubmission(schoolId, id, subId, userId, isFaculty, body);
+    const data = await homeworkService.reviewSubmission(
+      schoolId,
+      id,
+      subId,
+      userId,
+      isFaculty,
+      body,
+    );
 
     return ApiResponse.success(data, "Submission reviewed successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to review submission");
+    return ApiResponse.badRequest(
+      error.message || "Failed to review submission",
+    );
   }
 }

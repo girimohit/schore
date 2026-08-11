@@ -26,17 +26,26 @@ export class NoticeRepository {
     });
   }
 
-  async updateNotice(schoolId: string, id: string, data: Partial<CreateNoticeInput>) {
+  async updateNotice(
+    schoolId: string,
+    id: string,
+    data: Partial<CreateNoticeInput>,
+  ) {
     return prisma.notice.update({
       where: { id, schoolId },
       data: {
         title: data.title,
         description: data.description,
         audience: data.audience,
-        classId: data.classId !== undefined ? (data.classId || null) : undefined,
-        sectionId: data.sectionId !== undefined ? (data.sectionId || null) : undefined,
-        expiresAt: data.expiresAt !== undefined ? (data.expiresAt || null) : undefined,
-        attachmentUrl: data.attachmentUrl !== undefined ? (data.attachmentUrl || null) : undefined,
+        classId: data.classId !== undefined ? data.classId || null : undefined,
+        sectionId:
+          data.sectionId !== undefined ? data.sectionId || null : undefined,
+        expiresAt:
+          data.expiresAt !== undefined ? data.expiresAt || null : undefined,
+        attachmentUrl:
+          data.attachmentUrl !== undefined
+            ? data.attachmentUrl || null
+            : undefined,
       },
     });
   }
@@ -58,18 +67,18 @@ export class NoticeRepository {
   }
 
   // Retrieve notices based on audience rules
-  async findNoticesForUser(schoolId: string, options: {
-    role: string;
-    classId?: string;
-    sectionId?: string;
-  }) {
+  async findNoticesForUser(
+    schoolId: string,
+    options: {
+      role: string;
+      classId?: string;
+      sectionId?: string;
+    },
+  ) {
     const now = new Date();
 
     const dateFilter = {
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gte: now } },
-      ],
+      OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
     };
 
     // Admins see all notices

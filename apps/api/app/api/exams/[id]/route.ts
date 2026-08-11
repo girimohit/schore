@@ -5,7 +5,7 @@ import { UserRole, ExamStatus } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -32,7 +32,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -44,7 +44,9 @@ export async function PUT(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can update exam configurations");
+      return ApiResponse.forbidden(
+        "Only administrators can update exam configurations",
+      );
     }
 
     const body = await req.json();
@@ -59,7 +61,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -71,7 +73,9 @@ export async function DELETE(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can delete exam structures");
+      return ApiResponse.forbidden(
+        "Only administrators can delete exam structures",
+      );
     }
 
     const examService = new ExamService();

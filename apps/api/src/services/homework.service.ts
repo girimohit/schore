@@ -35,7 +35,12 @@ export class HomeworkService {
   private academicRepository = new AcademicRepository();
   private studentRepository = new StudentRepository();
 
-  async createHomework(schoolId: string, facultyId: string, isFaculty: boolean, input: unknown) {
+  async createHomework(
+    schoolId: string,
+    facultyId: string,
+    isFaculty: boolean,
+    input: unknown,
+  ) {
     const data = createHomeworkSchema.parse(input);
 
     if (isFaculty) {
@@ -47,7 +52,10 @@ export class HomeworkService {
         sectionId: data.sectionId,
       }); // We can use findFirst check in repository, or call database check
       // Let's do a simple check:
-      const assigned = await this.academicRepository.findSectionById(schoolId, data.sectionId);
+      const assigned = await this.academicRepository.findSectionById(
+        schoolId,
+        data.sectionId,
+      );
       if (!assigned || assigned.classId !== data.classId) {
         throw new Error("Invalid class/section assignment");
       }
@@ -59,7 +67,13 @@ export class HomeworkService {
     });
   }
 
-  async updateHomework(schoolId: string, id: string, facultyId: string, isFaculty: boolean, input: unknown) {
+  async updateHomework(
+    schoolId: string,
+    id: string,
+    facultyId: string,
+    isFaculty: boolean,
+    input: unknown,
+  ) {
     const data = updateHomeworkSchema.parse(input);
 
     if (isFaculty) {
@@ -75,7 +89,12 @@ export class HomeworkService {
     });
   }
 
-  async deleteHomework(schoolId: string, id: string, facultyId: string, isFaculty: boolean) {
+  async deleteHomework(
+    schoolId: string,
+    id: string,
+    facultyId: string,
+    isFaculty: boolean,
+  ) {
     if (isFaculty) {
       const homework = await this.homeworkRepository.findById(schoolId, id);
       if (!homework || homework.facultyId !== facultyId) {
@@ -93,32 +112,53 @@ export class HomeworkService {
     return homework;
   }
 
-  async getHomeworkList(schoolId: string, options: {
-    classId?: string;
-    sectionId?: string;
-    subjectId?: string;
-    facultyId?: string;
-  }) {
+  async getHomeworkList(
+    schoolId: string,
+    options: {
+      classId?: string;
+      sectionId?: string;
+      subjectId?: string;
+      facultyId?: string;
+    },
+  ) {
     return this.homeworkRepository.findHomeworkList(schoolId, options);
   }
 
   async getStudentHomework(schoolId: string, studentId: string) {
-    return this.homeworkRepository.findStudentAssignedHomework(schoolId, studentId);
+    return this.homeworkRepository.findStudentAssignedHomework(
+      schoolId,
+      studentId,
+    );
   }
 
-  async getHomeworkSubmissions(schoolId: string, homeworkId: string, facultyId: string, isFaculty: boolean) {
+  async getHomeworkSubmissions(
+    schoolId: string,
+    homeworkId: string,
+    facultyId: string,
+    isFaculty: boolean,
+  ) {
     if (isFaculty) {
-      const homework = await this.homeworkRepository.findById(schoolId, homeworkId);
+      const homework = await this.homeworkRepository.findById(
+        schoolId,
+        homeworkId,
+      );
       if (!homework || homework.facultyId !== facultyId) {
-        throw new Error("You are not authorized to view submissions for this homework");
+        throw new Error(
+          "You are not authorized to view submissions for this homework",
+        );
       }
     }
     return this.homeworkRepository.findSubmissions(homeworkId);
   }
 
-  async submitHomework(schoolId: string, homeworkId: string, userId: string, input: unknown) {
+  async submitHomework(
+    schoolId: string,
+    homeworkId: string,
+    userId: string,
+    input: unknown,
+  ) {
     const data = submitHomeworkSchema.parse(input);
-    
+
     // Resolve studentId from userId
     const student = await this.studentRepository.findByUserId(schoolId, userId);
     if (!student) {
@@ -126,24 +166,47 @@ export class HomeworkService {
     }
 
     // Verify student is assigned to this homework
-    const assigned = await this.homeworkRepository.findStudentSubmission(homeworkId, student.id);
+    const assigned = await this.homeworkRepository.findStudentSubmission(
+      homeworkId,
+      student.id,
+    );
     if (!assigned) {
       throw new Error("You are not assigned to this homework");
     }
 
-    return this.homeworkRepository.submitHomework(homeworkId, student.id, data.contentUrl);
+    return this.homeworkRepository.submitHomework(
+      homeworkId,
+      student.id,
+      data.contentUrl,
+    );
   }
 
-  async reviewSubmission(schoolId: string, homeworkId: string, submissionId: string, facultyId: string, isFaculty: boolean, input: unknown) {
+  async reviewSubmission(
+    schoolId: string,
+    homeworkId: string,
+    submissionId: string,
+    facultyId: string,
+    isFaculty: boolean,
+    input: unknown,
+  ) {
     const data = reviewSubmissionSchema.parse(input);
 
     if (isFaculty) {
-      const homework = await this.homeworkRepository.findById(schoolId, homeworkId);
+      const homework = await this.homeworkRepository.findById(
+        schoolId,
+        homeworkId,
+      );
       if (!homework || homework.facultyId !== facultyId) {
-        throw new Error("You are not authorized to review submissions for this homework");
+        throw new Error(
+          "You are not authorized to review submissions for this homework",
+        );
       }
     }
 
-    return this.homeworkRepository.reviewSubmission(submissionId, data.feedback, data.isApproved);
+    return this.homeworkRepository.reviewSubmission(
+      submissionId,
+      data.feedback,
+      data.isApproved,
+    );
   }
 }

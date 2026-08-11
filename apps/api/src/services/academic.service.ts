@@ -78,19 +78,27 @@ export class AcademicService {
   // ─────────────────────────────────────────────
   async createSection(schoolId: string, input: unknown) {
     const data = createSectionSchema.parse(input);
-    
+
     // Verify class belongs to the school
-    const classRecord = await this.academicRepository.findClassById(schoolId, data.classId);
+    const classRecord = await this.academicRepository.findClassById(
+      schoolId,
+      data.classId,
+    );
     if (!classRecord) {
       throw new Error("Class not found in this school");
     }
 
-    return this.academicRepository.createSection(schoolId, data.classId, { name: data.name });
+    return this.academicRepository.createSection(schoolId, data.classId, {
+      name: data.name,
+    });
   }
 
   async getSections(schoolId: string, classId?: string) {
     if (classId) {
-      const classRecord = await this.academicRepository.findClassById(schoolId, classId);
+      const classRecord = await this.academicRepository.findClassById(
+        schoolId,
+        classId,
+      );
       if (!classRecord) {
         throw new Error("Class not found in this school");
       }
@@ -115,30 +123,44 @@ export class AcademicService {
   // ─────────────────────────────────────────────
   async assignSubjectToClass(schoolId: string, input: unknown) {
     const data = assignSubjectToClassSchema.parse(input);
-    
+
     // Verify class belongs to school
-    const classRecord = await this.academicRepository.findClassById(schoolId, data.classId);
+    const classRecord = await this.academicRepository.findClassById(
+      schoolId,
+      data.classId,
+    );
     if (!classRecord) {
       throw new Error("Class not found");
     }
 
-    return this.academicRepository.assignSubjectToClass(data.classId, data.subjectId);
+    return this.academicRepository.assignSubjectToClass(
+      data.classId,
+      data.subjectId,
+    );
   }
 
   async assignFacultySubject(schoolId: string, input: unknown) {
     const data = assignFacultySubjectSchema.parse(input);
-    
+
     // Verify class belongs to school
-    const classRecord = await this.academicRepository.findClassById(schoolId, data.classId);
+    const classRecord = await this.academicRepository.findClassById(
+      schoolId,
+      data.classId,
+    );
     if (!classRecord) {
       throw new Error("Class not found");
     }
 
     // Verify section if provided
     if (data.sectionId) {
-      const sectionRecord = await this.academicRepository.findSectionById(schoolId, data.sectionId);
+      const sectionRecord = await this.academicRepository.findSectionById(
+        schoolId,
+        data.sectionId,
+      );
       if (!sectionRecord || sectionRecord.classId !== data.classId) {
-        throw new Error("Section not found or does not belong to the selected class");
+        throw new Error(
+          "Section not found or does not belong to the selected class",
+        );
       }
     }
 

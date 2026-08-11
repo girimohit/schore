@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function POST(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -17,15 +17,23 @@ export async function POST(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can add subjects to exams");
+      return ApiResponse.forbidden(
+        "Only administrators can add subjects to exams",
+      );
     }
 
     const body = await req.json();
     const examService = new ExamService();
     const data = await examService.addSubjectToExam(schoolId, id, body);
 
-    return ApiResponse.success(data, "Subject assigned to exam successfully", 201);
+    return ApiResponse.success(
+      data,
+      "Subject assigned to exam successfully",
+      201,
+    );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to assign subject to exam");
+    return ApiResponse.badRequest(
+      error.message || "Failed to assign subject to exam",
+    );
   }
 }

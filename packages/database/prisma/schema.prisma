@@ -26,6 +26,13 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum SchoolStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -102,7 +109,7 @@ model School {
   phone       String?
   address     String?
   logoUrl     String?
-  status      UserStatus @default(ACTIVE)
+  status      SchoolStatus @default(PENDING)
 
   users           User[]
   academicYears   AcademicYear[]
@@ -121,6 +128,7 @@ model School {
   remarks         StudentRemark[]
   branding        SchoolBranding?
   features        SchoolFeatures?
+  subscription    SchoolSubscription?
   auditLogs       AuditLog[]
 
   createdAt DateTime @default(now())
@@ -180,6 +188,31 @@ model SchoolFeatures {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   updatedAt DateTime @updatedAt
+}
+
+model SchoolSubscription {
+  id        String   @id @default(cuid())
+  schoolId  String   @unique
+  plan      String   // TRIAL, BASIC, PREMIUM
+  status    String   // ACTIVE, EXPIRED, CANCELLED
+  startDate DateTime
+  endDate   DateTime
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlatformConfig {
+  id                   String   @id @default(cuid())
+  maintenanceMode      Boolean  @default(false)
+  minAndroidVersion    String   @default("1.0.0")
+  minIosVersion        String   @default("1.0.0")
+  latestAndroidVersion String   @default("1.0.0")
+  latestIosVersion     String   @default("1.0.0")
+  killSwitches         Json     @default("{}") // e.g. {"homework": false, "timetable": false}
+  updatedAt            DateTime @updatedAt
 }
 
 model AuditLog {

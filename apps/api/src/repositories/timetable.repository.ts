@@ -30,19 +30,24 @@ export class TimetableRepository {
     });
   }
 
-  async updateEntry(schoolId: string, id: string, data: Partial<CreateTimetableInput>) {
+  async updateEntry(
+    schoolId: string,
+    id: string,
+    data: Partial<CreateTimetableInput>,
+  ) {
     return prisma.timetable.update({
       where: { id, schoolId },
       data: {
         classId: data.classId,
         sectionId: data.sectionId,
         subjectId: data.subjectId,
-        facultyId: data.facultyId !== undefined ? (data.facultyId || null) : undefined,
+        facultyId:
+          data.facultyId !== undefined ? data.facultyId || null : undefined,
         dayOfWeek: data.dayOfWeek,
         period: data.period,
         startTime: data.startTime,
         endTime: data.endTime,
-        room: data.room !== undefined ? (data.room || null) : undefined,
+        room: data.room !== undefined ? data.room || null : undefined,
       },
     });
   }
@@ -76,10 +81,7 @@ export class TimetableRepository {
         subject: true,
         faculty: true,
       },
-      orderBy: [
-        { dayOfWeek: "asc" },
-        { period: "asc" },
-      ],
+      orderBy: [{ dayOfWeek: "asc" }, { period: "asc" }],
     });
   }
 
@@ -94,10 +96,7 @@ export class TimetableRepository {
         section: true,
         subject: true,
       },
-      orderBy: [
-        { dayOfWeek: "asc" },
-        { period: "asc" },
-      ],
+      orderBy: [{ dayOfWeek: "asc" }, { period: "asc" }],
     });
   }
 
@@ -108,7 +107,7 @@ export class TimetableRepository {
     sectionId: string,
     dayOfWeek: number,
     period: number,
-    excludeId?: string
+    excludeId?: string,
   ) {
     return prisma.timetable.findFirst({
       where: {
@@ -127,7 +126,7 @@ export class TimetableRepository {
     facultyId: string,
     dayOfWeek: number,
     period: number,
-    excludeId?: string
+    excludeId?: string,
   ) {
     return prisma.timetable.findFirst({
       where: {

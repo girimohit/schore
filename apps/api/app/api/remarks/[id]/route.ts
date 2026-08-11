@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -19,7 +19,13 @@ export async function PUT(
 
     const body = await req.json();
     const remarkService = new RemarkService();
-    const data = await remarkService.updateRemark(schoolId, id, userId, role, body);
+    const data = await remarkService.updateRemark(
+      schoolId,
+      id,
+      userId,
+      role,
+      body,
+    );
 
     return ApiResponse.success(data, "Student remark updated successfully");
   } catch (error: any) {
@@ -29,7 +35,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;

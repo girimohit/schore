@@ -7,7 +7,11 @@ export interface CreateRemarkInput {
 }
 
 export class RemarkRepository {
-  async createRemark(schoolId: string, facultyId: string | null, data: CreateRemarkInput) {
+  async createRemark(
+    schoolId: string,
+    facultyId: string | null,
+    data: CreateRemarkInput,
+  ) {
     return prisma.studentRemark.create({
       data: {
         schoolId,
@@ -19,7 +23,11 @@ export class RemarkRepository {
     });
   }
 
-  async updateRemark(schoolId: string, id: string, data: { category?: RemarkCategory; text?: string }) {
+  async updateRemark(
+    schoolId: string,
+    id: string,
+    data: { category?: RemarkCategory; text?: string },
+  ) {
     return prisma.studentRemark.update({
       where: { id, schoolId },
       data,

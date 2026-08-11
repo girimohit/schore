@@ -20,8 +20,14 @@ export async function GET(req: NextRequest) {
       // Students view their own assigned homework
       const studentService = new StudentService();
       const student = await studentService.getStudentByUserId(schoolId, userId);
-      const data = await homeworkService.getStudentHomework(schoolId, student.id);
-      return ApiResponse.success(data, "Student homework retrieved successfully");
+      const data = await homeworkService.getStudentHomework(
+        schoolId,
+        student.id,
+      );
+      return ApiResponse.success(
+        data,
+        "Student homework retrieved successfully",
+      );
     }
 
     // Faculty or Admins can search lists of homework
@@ -29,7 +35,10 @@ export async function GET(req: NextRequest) {
     const classId = searchParams.get("classId") || undefined;
     const sectionId = searchParams.get("sectionId") || undefined;
     const subjectId = searchParams.get("subjectId") || undefined;
-    const facultyId = role === UserRole.FACULTY ? userId : (searchParams.get("facultyId") || undefined);
+    const facultyId =
+      role === UserRole.FACULTY
+        ? userId
+        : searchParams.get("facultyId") || undefined;
 
     const data = await homeworkService.getHomeworkList(schoolId, {
       classId,
@@ -55,17 +64,30 @@ export async function POST(req: NextRequest) {
     }
 
     if (role === UserRole.STUDENT) {
-      return ApiResponse.forbidden("Students cannot create homework assignments");
+      return ApiResponse.forbidden(
+        "Students cannot create homework assignments",
+      );
     }
 
     const body = await req.json();
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
-    const data = await homeworkService.createHomework(schoolId, userId, isFaculty, body);
+    const data = await homeworkService.createHomework(
+      schoolId,
+      userId,
+      isFaculty,
+      body,
+    );
 
-    return ApiResponse.success(data, "Homework assignment created successfully", 201);
+    return ApiResponse.success(
+      data,
+      "Homework assignment created successfully",
+      201,
+    );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to create homework assignment");
+    return ApiResponse.badRequest(
+      error.message || "Failed to create homework assignment",
+    );
   }
 }

@@ -10,26 +10,29 @@ export interface FindStudentsOptions {
 }
 
 export class StudentRepository {
-  async createStudent(schoolId: string, data: {
-    admissionNumber: string;
-    firstName: string;
-    middleName?: string;
-    lastName?: string;
-    dateOfBirth?: Date;
-    gender?: Gender;
-    photoUrl?: string;
-    bloodGroup?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    admissionDate?: Date;
-    userId?: string;
-    // Enrollment details
-    academicYearId: string;
-    classId: string;
-    sectionId: string;
-    rollNumber?: number;
-  }) {
+  async createStudent(
+    schoolId: string,
+    data: {
+      admissionNumber: string;
+      firstName: string;
+      middleName?: string;
+      lastName?: string;
+      dateOfBirth?: Date;
+      gender?: Gender;
+      photoUrl?: string;
+      bloodGroup?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+      admissionDate?: Date;
+      userId?: string;
+      // Enrollment details
+      academicYearId: string;
+      classId: string;
+      sectionId: string;
+      rollNumber?: number;
+    },
+  ) {
     return prisma.$transaction(async (tx) => {
       // 1. Create Student
       const student = await tx.student.create({
@@ -68,20 +71,24 @@ export class StudentRepository {
     });
   }
 
-  async updateStudent(schoolId: string, studentId: string, data: {
-    firstName?: string;
-    middleName?: string;
-    lastName?: string;
-    dateOfBirth?: Date;
-    gender?: Gender;
-    photoUrl?: string;
-    bloodGroup?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    admissionDate?: Date;
-    status?: StudentStatus;
-  }) {
+  async updateStudent(
+    schoolId: string,
+    studentId: string,
+    data: {
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      dateOfBirth?: Date;
+      gender?: Gender;
+      photoUrl?: string;
+      bloodGroup?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+      admissionDate?: Date;
+      status?: StudentStatus;
+    },
+  ) {
     return prisma.student.update({
       where: { id: studentId, schoolId },
       data: {
@@ -172,7 +179,11 @@ export class StudentRepository {
   }
 
   // Fetch only students enrolled in classes/sections assigned to the faculty member
-  async findStudentsForFaculty(schoolId: string, facultyId: string, options: FindStudentsOptions) {
+  async findStudentsForFaculty(
+    schoolId: string,
+    facultyId: string,
+    options: FindStudentsOptions,
+  ) {
     const { classId, sectionId, status, search, take = 20, skip = 0 } = options;
 
     // Get classes & sections assigned to faculty
@@ -237,21 +248,24 @@ export class StudentRepository {
     return { students, total };
   }
 
-  async checkFacultyAccess(schoolId: string, studentId: string, facultyId: string): Promise<boolean> {
+  async checkFacultyAccess(
+    schoolId: string,
+    studentId: string,
+    facultyId: string,
+  ): Promise<boolean> {
     const student = await this.findById(schoolId, studentId);
     if (!student) return false;
-    
-    const activeEnrollment = student.enrollments.find((e) => e.status === "ACTIVE");
+
+    const activeEnrollment = student.enrollments.find(
+      (e) => e.status === "ACTIVE",
+    );
     if (!activeEnrollment) return false;
 
     const assignment = await prisma.facultySubjectAssignment.findFirst({
       where: {
         facultyId,
         classId: activeEnrollment.classId,
-        OR: [
-          { sectionId: null },
-          { sectionId: activeEnrollment.sectionId },
-        ],
+        OR: [{ sectionId: null }, { sectionId: activeEnrollment.sectionId }],
       },
     });
 

@@ -8,17 +8,20 @@ export interface FindFacultyOptions {
 }
 
 export class FacultyRepository {
-  async createFaculty(schoolId: string, data: {
-    userId: string;
-    employeeId: string;
-    firstName: string;
-    middleName?: string;
-    lastName?: string;
-    phone?: string;
-    email?: string;
-    photoUrl?: string;
-    joiningDate?: Date;
-  }) {
+  async createFaculty(
+    schoolId: string,
+    data: {
+      userId: string;
+      employeeId: string;
+      firstName: string;
+      middleName?: string;
+      lastName?: string;
+      phone?: string;
+      email?: string;
+      photoUrl?: string;
+      joiningDate?: Date;
+    },
+  ) {
     return prisma.faculty.create({
       data: {
         schoolId,
@@ -36,16 +39,20 @@ export class FacultyRepository {
     });
   }
 
-  async updateFaculty(schoolId: string, id: string, data: {
-    firstName?: string;
-    middleName?: string;
-    lastName?: string;
-    phone?: string;
-    email?: string;
-    photoUrl?: string;
-    joiningDate?: Date;
-    status?: UserStatus;
-  }) {
+  async updateFaculty(
+    schoolId: string,
+    id: string,
+    data: {
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      phone?: string;
+      email?: string;
+      photoUrl?: string;
+      joiningDate?: Date;
+      status?: UserStatus;
+    },
+  ) {
     return prisma.faculty.update({
       where: { id, schoolId },
       data: {

@@ -31,14 +31,18 @@ export async function GET(req: NextRequest) {
 
     if (role === UserRole.FACULTY) {
       // Faculty can only view students in their assigned classes/sections
-      const data = await studentService.searchStudentsForFaculty(schoolId, userId, {
-        classId,
-        sectionId,
-        status,
-        search,
-        take: limit,
-        skip: offset,
-      });
+      const data = await studentService.searchStudentsForFaculty(
+        schoolId,
+        userId,
+        {
+          classId,
+          sectionId,
+          status,
+          search,
+          take: limit,
+          skip: offset,
+        },
+      );
       return ApiResponse.success(data, "Students retrieved successfully");
     }
 

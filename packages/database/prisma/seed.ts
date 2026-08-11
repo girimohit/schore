@@ -1,4 +1,9 @@
-import { PrismaClient, UserRole, UserStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  UserRole,
+  UserStatus,
+  SchoolStatus,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -14,7 +19,7 @@ async function main() {
       email: "info@demo.schore.com",
       phone: "1234567890",
       address: "123 Education Way",
-      status: UserStatus.ACTIVE,
+      status: SchoolStatus.ACTIVE,
     },
   });
 
@@ -25,12 +30,14 @@ async function main() {
     create: {
       schoolId: school.id,
       appName: "Schore ERP",
-      logoUrl: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=128&h=128&fit=crop",
+      logoUrl:
+        "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=128&h=128&fit=crop",
       primaryColor: "#6366F1",
       secondaryColor: "#4F46E5",
       themeMode: "DARK",
       fontFamily: "Inter",
-      splashImageUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop",
+      splashImageUrl:
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop",
     },
   });
 
@@ -51,44 +58,44 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash("Admin@123", 12);
 
+  async function getOrCreateUser(
+    email: string,
+    role: UserRole,
+    schoolId?: string,
+  ) {
+    let user = await prisma.user.findFirst({ where: { email } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          passwordHash: hashedPassword,
+          role,
+          status: UserStatus.ACTIVE,
+          schoolId,
+        },
+      });
+    } else if (schoolId && user.schoolId !== schoolId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { schoolId },
+      });
+    }
+    return user;
+  }
+
   console.log("Seeding Users...");
   // Super Admin
-  await prisma.user.upsert({
-    where: { email: "superadmin@schore.com" },
-    update: {},
-    create: {
-      email: "superadmin@schore.com",
-      passwordHash: hashedPassword,
-      role: UserRole.SUPER_ADMIN,
-      status: UserStatus.ACTIVE,
-    },
-  });
+  await getOrCreateUser("superadmin@schore.com", UserRole.SUPER_ADMIN);
 
   // School Admin (linked to school)
-  await prisma.user.upsert({
-    where: { email: "admin@schore.com" },
-    update: { schoolId: school.id },
-    create: {
-      email: "admin@schore.com",
-      passwordHash: hashedPassword,
-      role: UserRole.SCHOOL_ADMIN,
-      status: UserStatus.ACTIVE,
-      schoolId: school.id,
-    },
-  });
+  await getOrCreateUser("admin@schore.com", UserRole.SCHOOL_ADMIN, school.id);
 
   // Faculty User
-  const facultyUser = await prisma.user.upsert({
-    where: { email: "faculty@schore.com" },
-    update: { schoolId: school.id },
-    create: {
-      email: "faculty@schore.com",
-      passwordHash: hashedPassword,
-      role: UserRole.FACULTY,
-      status: UserStatus.ACTIVE,
-      schoolId: school.id,
-    },
-  });
+  const facultyUser = await getOrCreateUser(
+    "faculty@schore.com",
+    UserRole.FACULTY,
+    school.id,
+  );
 
   // Faculty Profile
   await prisma.faculty.upsert({
@@ -106,17 +113,11 @@ async function main() {
   });
 
   // Student User
-  const studentUser = await prisma.user.upsert({
-    where: { email: "student@schore.com" },
-    update: { schoolId: school.id },
-    create: {
-      email: "student@schore.com",
-      passwordHash: hashedPassword,
-      role: UserRole.STUDENT,
-      status: UserStatus.ACTIVE,
-      schoolId: school.id,
-    },
-  });
+  const studentUser = await getOrCreateUser(
+    "student@schore.com",
+    UserRole.STUDENT,
+    school.id,
+  );
 
   // Student Profile
   await prisma.student.upsert({

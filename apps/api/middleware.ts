@@ -21,14 +21,14 @@ export async function middleware(request: NextRequest) {
         {
           status: 426,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
   }
 
   // 2. Route Protection & Auth
   const { pathname } = request.nextUrl;
-  
+
   const isAuthRoute =
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/refresh") ||
@@ -38,25 +38,32 @@ export async function middleware(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: "Unauthorized: Missing or invalid token format" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: false,
+          message: "Unauthorized: Missing or invalid token format",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: "Unauthorized: Missing token" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: false,
+          message: "Unauthorized: Missing token",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
 
     try {
       const secret = new TextEncoder().encode(
-        process.env.JWT_ACCESS_SECRET || "default_access_secret_change_me_in_production"
+        process.env.JWT_ACCESS_SECRET ||
+          "default_access_secret_change_me_in_production",
       );
       const { payload } = await jwtVerify(token, secret);
-      
+
       // Resolve Tenant and User context, forward them via headers
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set("x-user-id", payload.userId as string);
@@ -70,8 +77,11 @@ export async function middleware(request: NextRequest) {
       });
     } catch (err) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: "Unauthorized: Invalid or expired token" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: false,
+          message: "Unauthorized: Invalid or expired token",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
   }

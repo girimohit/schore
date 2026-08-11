@@ -9,14 +9,22 @@ export async function GET(req: NextRequest) {
     const appVersion = req.headers.get("x-app-version");
 
     if (!userId || !schoolId) {
-      return ApiResponse.unauthorized("Missing user or school context in headers");
+      return ApiResponse.unauthorized(
+        "Missing user or school context in headers",
+      );
     }
 
     const bootstrapService = new BootstrapService();
-    const data = await bootstrapService.getBootstrapData(userId, schoolId, appVersion);
+    const data = await bootstrapService.getBootstrapData(
+      userId,
+      schoolId,
+      appVersion,
+    );
 
     return ApiResponse.success(data, "Bootstrap data loaded successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to load bootstrap data");
+    return ApiResponse.badRequest(
+      error.message || "Failed to load bootstrap data",
+    );
   }
 }

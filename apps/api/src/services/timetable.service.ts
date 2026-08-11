@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { TimetableRepository, CreateTimetableInput } from "../repositories/timetable.repository";
+import {
+  TimetableRepository,
+  CreateTimetableInput,
+} from "../repositories/timetable.repository";
 
 export const createTimetableSchema = z.object({
   classId: z.string().min(1, "Class ID is required"),
@@ -37,22 +40,27 @@ export class TimetableService {
       data.classId,
       data.sectionId,
       data.dayOfWeek,
-      data.period
+      data.period,
     );
     if (classConflict) {
-      throw new Error(`This class/section already has a period assigned at Day ${data.dayOfWeek}, Period ${data.period}`);
+      throw new Error(
+        `This class/section already has a period assigned at Day ${data.dayOfWeek}, Period ${data.period}`,
+      );
     }
 
     // 2. Conflict Check: Faculty conflict (if facultyId is provided)
     if (data.facultyId) {
-      const facultyConflict = await this.timetableRepository.checkFacultyConflict(
-        schoolId,
-        data.facultyId,
-        data.dayOfWeek,
-        data.period
-      );
+      const facultyConflict =
+        await this.timetableRepository.checkFacultyConflict(
+          schoolId,
+          data.facultyId,
+          data.dayOfWeek,
+          data.period,
+        );
       if (facultyConflict) {
-        throw new Error("This faculty member is already scheduled for another class during this period");
+        throw new Error(
+          "This faculty member is already scheduled for another class during this period",
+        );
       }
     }
 
@@ -69,9 +77,13 @@ export class TimetableService {
 
     const classId = data.classId || existing.classId;
     const sectionId = data.sectionId || existing.sectionId;
-    const dayOfWeek = data.dayOfWeek !== undefined ? data.dayOfWeek : existing.dayOfWeek;
+    const dayOfWeek =
+      data.dayOfWeek !== undefined ? data.dayOfWeek : existing.dayOfWeek;
     const period = data.period !== undefined ? data.period : existing.period;
-    const facultyId = data.facultyId !== undefined ? data.facultyId : (existing.facultyId || undefined);
+    const facultyId =
+      data.facultyId !== undefined
+        ? data.facultyId
+        : existing.facultyId || undefined;
 
     // Check class conflict
     const classConflict = await this.timetableRepository.checkClassConflict(
@@ -80,23 +92,28 @@ export class TimetableService {
       sectionId,
       dayOfWeek,
       period,
-      id
+      id,
     );
     if (classConflict) {
-      throw new Error(`Conflict: Class/section has another assignment at Day ${dayOfWeek}, Period ${period}`);
+      throw new Error(
+        `Conflict: Class/section has another assignment at Day ${dayOfWeek}, Period ${period}`,
+      );
     }
 
     // Check faculty conflict
     if (facultyId) {
-      const facultyConflict = await this.timetableRepository.checkFacultyConflict(
-        schoolId,
-        facultyId,
-        dayOfWeek,
-        period,
-        id
-      );
+      const facultyConflict =
+        await this.timetableRepository.checkFacultyConflict(
+          schoolId,
+          facultyId,
+          dayOfWeek,
+          period,
+          id,
+        );
       if (facultyConflict) {
-        throw new Error("Conflict: Faculty member is scheduled elsewhere during this period");
+        throw new Error(
+          "Conflict: Faculty member is scheduled elsewhere during this period",
+        );
       }
     }
 
@@ -119,7 +136,11 @@ export class TimetableService {
     return entry;
   }
 
-  async getClassTimetable(schoolId: string, classId: string, sectionId: string) {
+  async getClassTimetable(
+    schoolId: string,
+    classId: string,
+    sectionId: string,
+  ) {
     return this.timetableRepository.findForClass(schoolId, classId, sectionId);
   }
 

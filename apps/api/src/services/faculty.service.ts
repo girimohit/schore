@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { FacultyRepository, FindFacultyOptions } from "../repositories/faculty.repository";
+import {
+  FacultyRepository,
+  FindFacultyOptions,
+} from "../repositories/faculty.repository";
 import { UserStatus } from "@schore/database";
 
 const statusEnum = z.nativeEnum(UserStatus);

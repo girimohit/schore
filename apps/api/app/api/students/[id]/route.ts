@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -23,16 +23,27 @@ export async function GET(
     // RBAC & Tenant Isolation checks
     if (role === UserRole.STUDENT) {
       if (student.userId !== userId) {
-        return ApiResponse.forbidden("Students can only view their own information");
+        return ApiResponse.forbidden(
+          "Students can only view their own information",
+        );
       }
     } else if (role === UserRole.FACULTY) {
-      const hasAccess = await studentService.checkFacultyAccess(schoolId, id, userId);
+      const hasAccess = await studentService.checkFacultyAccess(
+        schoolId,
+        id,
+        userId,
+      );
       if (!hasAccess) {
-        return ApiResponse.forbidden("Faculty can only access students from their assigned classes/sections");
+        return ApiResponse.forbidden(
+          "Faculty can only access students from their assigned classes/sections",
+        );
       }
     }
 
-    return ApiResponse.success(student, "Student details retrieved successfully");
+    return ApiResponse.success(
+      student,
+      "Student details retrieved successfully",
+    );
   } catch (error: any) {
     return ApiResponse.notFound(error.message || "Student not found");
   }
@@ -40,7 +51,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -52,7 +63,9 @@ export async function PUT(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can update student profiles");
+      return ApiResponse.forbidden(
+        "Only administrators can update student profiles",
+      );
     }
 
     const body = await req.json();

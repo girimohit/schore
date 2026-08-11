@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       authData.user.id,
       authData.user.id,
       authData.user.schoolId || undefined,
-      { email }
+      { email },
     );
 
     return ApiResponse.success(authData, "Login successful");

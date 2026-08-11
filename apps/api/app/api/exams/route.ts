@@ -16,11 +16,12 @@ export async function GET(req: NextRequest) {
     const classId = searchParams.get("classId") || undefined;
     const sectionId = searchParams.get("sectionId") || undefined;
     const academicYearId = searchParams.get("academicYearId") || undefined;
-    
+
     // Students can ONLY query published exams
-    const status = role === UserRole.STUDENT 
-      ? ExamStatus.PUBLISHED 
-      : ((searchParams.get("status") as ExamStatus) || undefined);
+    const status =
+      role === UserRole.STUDENT
+        ? ExamStatus.PUBLISHED
+        : (searchParams.get("status") as ExamStatus) || undefined;
 
     const examService = new ExamService();
     const data = await examService.getExams(schoolId, {
@@ -47,7 +48,9 @@ export async function POST(req: NextRequest) {
 
     // Admins config exam structures
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can create exam schedules");
+      return ApiResponse.forbidden(
+        "Only administrators can create exam schedules",
+      );
     }
 
     const body = await req.json();

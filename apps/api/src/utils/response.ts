@@ -8,18 +8,22 @@ export class ApiResponse {
         message,
         data,
       },
-      { status }
+      { status },
     );
   }
 
-  static error(message = "An error occurred", status = 500, errors: any = null) {
+  static error(
+    message = "An error occurred",
+    status = 500,
+    errors: any = null,
+  ) {
     return NextResponse.json(
       {
         success: false,
         message,
         errors,
       },
-      { status }
+      { status },
     );
   }
 

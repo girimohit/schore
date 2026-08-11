@@ -36,7 +36,9 @@ export const recordResultSchema = z.object({
 });
 
 export const batchRecordResultSchema = z.object({
-  results: z.array(recordResultSchema).min(1, "At least one result record is required"),
+  results: z
+    .array(recordResultSchema)
+    .min(1, "At least one result record is required"),
 });
 
 export class ExamService {
@@ -65,7 +67,15 @@ export class ExamService {
     return exam;
   }
 
-  async getExams(schoolId: string, options: { classId?: string; sectionId?: string; academicYearId?: string; status?: ExamStatus }) {
+  async getExams(
+    schoolId: string,
+    options: {
+      classId?: string;
+      sectionId?: string;
+      academicYearId?: string;
+      status?: ExamStatus;
+    },
+  ) {
     return this.examRepository.findExams(schoolId, options);
   }
 
@@ -74,7 +84,7 @@ export class ExamService {
   // ─────────────────────────────────────────────
   async addSubjectToExam(schoolId: string, examId: string, input: unknown) {
     const data = addSubjectToExamSchema.parse(input);
-    
+
     // Verify exam exists in school
     const exam = await this.examRepository.findById(schoolId, examId);
     if (!exam) {
@@ -97,7 +107,13 @@ export class ExamService {
   // ─────────────────────────────────────────────
   // RESULTS
   // ─────────────────────────────────────────────
-  async recordResultsBatch(schoolId: string, examId: string, userId: string, isFaculty: boolean, input: unknown) {
+  async recordResultsBatch(
+    schoolId: string,
+    examId: string,
+    userId: string,
+    isFaculty: boolean,
+    input: unknown,
+  ) {
     const data = batchRecordResultSchema.parse(input);
 
     const exam = await this.examRepository.findById(schoolId, examId);
@@ -112,11 +128,13 @@ export class ExamService {
       const isClassTeacher = await this.examRepository.isFacultyAssignedToClass(
         userId,
         exam.classId,
-        exam.sectionId || undefined
+        exam.sectionId || undefined,
       );
 
       if (!isClassTeacher) {
-        throw new Error("Access denied: You are not authorized to update marks for this class");
+        throw new Error(
+          "Access denied: You are not authorized to update marks for this class",
+        );
       }
     }
 
@@ -125,15 +143,21 @@ export class ExamService {
       // Find subject configuration to compare marks and status
       const subject = exam.subjects.find((s) => s.id === record.examSubjectId);
       if (!subject) {
-        throw new Error(`Subject with ID ${record.examSubjectId} not found in this exam`);
+        throw new Error(
+          `Subject with ID ${record.examSubjectId} not found in this exam`,
+        );
       }
 
       const marks = record.marksObtained;
       if (Number(marks) > Number(subject.maxMarks)) {
-        throw new Error(`Marks obtained (${marks}) cannot exceed maximum marks (${subject.maxMarks})`);
+        throw new Error(
+          `Marks obtained (${marks}) cannot exceed maximum marks (${subject.maxMarks})`,
+        );
       }
 
-      const percentage = Math.round((Number(marks) / Number(subject.maxMarks)) * 100);
+      const percentage = Math.round(
+        (Number(marks) / Number(subject.maxMarks)) * 100,
+      );
       let grade = "F";
       if (percentage >= 90) grade = "A+";
       else if (percentage >= 80) grade = "A";
@@ -165,7 +189,12 @@ export class ExamService {
     return this.examRepository.findStudentResults(schoolId, studentId);
   }
 
-  async getExamResults(schoolId: string, examId: string, userId: string, isFaculty: boolean) {
+  async getExamResults(
+    schoolId: string,
+    examId: string,
+    userId: string,
+    isFaculty: boolean,
+  ) {
     const exam = await this.examRepository.findById(schoolId, examId);
     if (!exam) {
       throw new Error("Exam not found");
@@ -175,11 +204,13 @@ export class ExamService {
       const isClassTeacher = await this.examRepository.isFacultyAssignedToClass(
         userId,
         exam.classId,
-        exam.sectionId || undefined
+        exam.sectionId || undefined,
       );
 
       if (!isClassTeacher) {
-        throw new Error("Access denied: You can only view results for your assigned classes");
+        throw new Error(
+          "Access denied: You can only view results for your assigned classes",
+        );
       }
     }
 

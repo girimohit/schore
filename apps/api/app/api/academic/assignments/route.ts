@@ -12,21 +12,39 @@ export async function POST(req: NextRequest) {
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can assign academic resources");
-    } 
+      return ApiResponse.forbidden(
+        "Only administrators can assign academic resources",
+      );
+    }
 
-    const body = await req.url ? await req.json() : {};
+    const body = (await req.url) ? await req.json() : {};
     const { type, ...payload } = body;
     const academicService = new AcademicService();
 
     if (type === "class-subject") {
-      const data = await academicService.assignSubjectToClass(schoolId, payload);
-      return ApiResponse.success(data, "Subject assigned to class successfully", 201);
+      const data = await academicService.assignSubjectToClass(
+        schoolId,
+        payload,
+      );
+      return ApiResponse.success(
+        data,
+        "Subject assigned to class successfully",
+        201,
+      );
     } else if (type === "faculty-subject") {
-      const data = await academicService.assignFacultySubject(schoolId, payload);
-      return ApiResponse.success(data, "Subject assigned to faculty successfully", 201);
+      const data = await academicService.assignFacultySubject(
+        schoolId,
+        payload,
+      );
+      return ApiResponse.success(
+        data,
+        "Subject assigned to faculty successfully",
+        201,
+      );
     } else {
-      return ApiResponse.badRequest("Invalid assignment type. Must be 'class-subject' or 'faculty-subject'");
+      return ApiResponse.badRequest(
+        "Invalid assignment type. Must be 'class-subject' or 'faculty-subject'",
+      );
     }
   } catch (error: any) {
     return ApiResponse.badRequest(error.message || "Failed to make assignment");

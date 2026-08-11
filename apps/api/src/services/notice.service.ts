@@ -33,15 +33,25 @@ export class NoticeService {
     const data = createNoticeSchema.parse(input);
 
     if (isFaculty) {
-      if (data.audience === NoticeAudience.SCHOOL || data.audience === NoticeAudience.FACULTY) {
-        throw new Error("Faculty members cannot publish school-wide or faculty-wide notices");
+      if (
+        data.audience === NoticeAudience.SCHOOL ||
+        data.audience === NoticeAudience.FACULTY
+      ) {
+        throw new Error(
+          "Faculty members cannot publish school-wide or faculty-wide notices",
+        );
       }
     }
 
     return this.noticeRepository.createNotice(schoolId, data);
   }
 
-  async updateNotice(schoolId: string, id: string, isFaculty: boolean, input: unknown) {
+  async updateNotice(
+    schoolId: string,
+    id: string,
+    isFaculty: boolean,
+    input: unknown,
+  ) {
     const data = updateNoticeSchema.parse(input);
 
     const existing = await this.noticeRepository.findById(schoolId, id);
@@ -50,8 +60,13 @@ export class NoticeService {
     }
 
     if (isFaculty) {
-      if (data.audience === NoticeAudience.SCHOOL || data.audience === NoticeAudience.FACULTY) {
-        throw new Error("Faculty members cannot publish school-wide or faculty-wide notices");
+      if (
+        data.audience === NoticeAudience.SCHOOL ||
+        data.audience === NoticeAudience.FACULTY
+      ) {
+        throw new Error(
+          "Faculty members cannot publish school-wide or faculty-wide notices",
+        );
       }
     }
 
@@ -79,9 +94,14 @@ export class NoticeService {
     let sectionId: string | undefined;
 
     if (role === "STUDENT") {
-      const student = await this.studentRepository.findByUserId(schoolId, userId);
+      const student = await this.studentRepository.findByUserId(
+        schoolId,
+        userId,
+      );
       if (student) {
-        const activeEnrollment = student.enrollments.find((e) => e.status === "ACTIVE");
+        const activeEnrollment = student.enrollments.find(
+          (e) => e.status === "ACTIVE",
+        );
         if (activeEnrollment) {
           classId = activeEnrollment.classId;
           sectionId = activeEnrollment.sectionId;

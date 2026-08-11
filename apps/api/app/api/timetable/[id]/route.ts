@@ -5,7 +5,7 @@ import { UserRole } from "@schore/database";
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -25,7 +25,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -37,7 +37,9 @@ export async function PUT(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can update the timetable");
+      return ApiResponse.forbidden(
+        "Only administrators can update the timetable",
+      );
     }
 
     const body = await req.json();
@@ -46,13 +48,15 @@ export async function PUT(
 
     return ApiResponse.success(data, "Timetable entry updated successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to update timetable entry");
+    return ApiResponse.badRequest(
+      error.message || "Failed to update timetable entry",
+    );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await props.params;
@@ -64,7 +68,9 @@ export async function DELETE(
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can delete timetable entries");
+      return ApiResponse.forbidden(
+        "Only administrators can delete timetable entries",
+      );
     }
 
     const timetableService = new TimetableService();
@@ -72,6 +78,8 @@ export async function DELETE(
 
     return ApiResponse.success(null, "Timetable entry deleted successfully");
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to delete timetable entry");
+    return ApiResponse.badRequest(
+      error.message || "Failed to delete timetable entry",
+    );
   }
 }

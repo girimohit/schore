@@ -25,16 +25,22 @@ export class ExamRepository {
     });
   }
 
-  async updateExam(schoolId: string, id: string, data: Partial<CreateExamInput> & { status?: ExamStatus }) {
+  async updateExam(
+    schoolId: string,
+    id: string,
+    data: Partial<CreateExamInput> & { status?: ExamStatus },
+  ) {
     return prisma.exam.update({
       where: { id, schoolId },
       data: {
         name: data.name,
         academicYearId: data.academicYearId,
         classId: data.classId,
-        sectionId: data.sectionId !== undefined ? (data.sectionId || null) : undefined,
-        startDate: data.startDate !== undefined ? (data.startDate || null) : undefined,
-        endDate: data.endDate !== undefined ? (data.endDate || null) : undefined,
+        sectionId:
+          data.sectionId !== undefined ? data.sectionId || null : undefined,
+        startDate:
+          data.startDate !== undefined ? data.startDate || null : undefined,
+        endDate: data.endDate !== undefined ? data.endDate || null : undefined,
         status: data.status,
       },
     });
@@ -62,13 +68,23 @@ export class ExamRepository {
     });
   }
 
-  async findExams(schoolId: string, options: { classId?: string; sectionId?: string; academicYearId?: string; status?: ExamStatus }) {
+  async findExams(
+    schoolId: string,
+    options: {
+      classId?: string;
+      sectionId?: string;
+      academicYearId?: string;
+      status?: ExamStatus;
+    },
+  ) {
     return prisma.exam.findMany({
       where: {
         schoolId,
         ...(options.classId ? { classId: options.classId } : {}),
         ...(options.sectionId ? { sectionId: options.sectionId } : {}),
-        ...(options.academicYearId ? { academicYearId: options.academicYearId } : {}),
+        ...(options.academicYearId
+          ? { academicYearId: options.academicYearId }
+          : {}),
         ...(options.status ? { status: options.status } : {}),
       },
       include: {
@@ -115,16 +131,19 @@ export class ExamRepository {
   // ─────────────────────────────────────────────
   // RESULTS
   // ─────────────────────────────────────────────
-  async recordResult(schoolId: string, data: {
-    examId: string;
-    studentId: string;
-    examSubjectId: string;
-    marks: number;
-    grade?: string;
-    percentage?: number;
-    remarks?: string;
-    status: "PASS" | "FAIL" | "ABSENT";
-  }) {
+  async recordResult(
+    schoolId: string,
+    data: {
+      examId: string;
+      studentId: string;
+      examSubjectId: string;
+      marks: number;
+      grade?: string;
+      percentage?: number;
+      remarks?: string;
+      status: "PASS" | "FAIL" | "ABSENT";
+    },
+  ) {
     return prisma.result.upsert({
       where: {
         examSubjectId_studentId: {
@@ -203,17 +222,20 @@ export class ExamRepository {
   }
 
   // Authorization: check if faculty is assigned to the class/section
-  async isFacultyAssignedToClass(facultyId: string, classId: string, sectionId?: string): Promise<boolean> {
+  async isFacultyAssignedToClass(
+    facultyId: string,
+    classId: string,
+    sectionId?: string,
+  ): Promise<boolean> {
     const assignment = await prisma.facultySubjectAssignment.findFirst({
       where: {
         facultyId,
         classId,
-        ...(sectionId ? {
-          OR: [
-            { sectionId: null },
-            { sectionId },
-          ],
-        } : {}),
+        ...(sectionId
+          ? {
+              OR: [{ sectionId: null }, { sectionId }],
+            }
+          : {}),
       },
     });
     return !!assignment;

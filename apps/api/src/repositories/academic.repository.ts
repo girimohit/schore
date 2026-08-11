@@ -4,7 +4,10 @@ export class AcademicRepository {
   // ─────────────────────────────────────────────
   // ACADEMIC YEAR
   // ─────────────────────────────────────────────
-  async createAcademicYear(schoolId: string, data: { name: string; startDate: Date; endDate: Date; isCurrent?: boolean }) {
+  async createAcademicYear(
+    schoolId: string,
+    data: { name: string; startDate: Date; endDate: Date; isCurrent?: boolean },
+  ) {
     if (data.isCurrent) {
       // Unset previous current academic year
       await prisma.academicYear.updateMany({
@@ -46,7 +49,10 @@ export class AcademicRepository {
   // ─────────────────────────────────────────────
   // CLASS
   // ─────────────────────────────────────────────
-  async createClass(schoolId: string, data: { name: string; code?: string; sortOrder?: number }) {
+  async createClass(
+    schoolId: string,
+    data: { name: string; code?: string; sortOrder?: number },
+  ) {
     return prisma.class.create({
       data: {
         schoolId,
@@ -84,7 +90,11 @@ export class AcademicRepository {
   // ─────────────────────────────────────────────
   // SECTION
   // ─────────────────────────────────────────────
-  async createSection(schoolId: string, classId: string, data: { name: string }) {
+  async createSection(
+    schoolId: string,
+    classId: string,
+    data: { name: string },
+  ) {
     return prisma.section.create({
       data: {
         schoolId,

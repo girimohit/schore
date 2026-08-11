@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
 
     // RBAC: Only administrators can list all faculty profiles
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can list faculty members");
+      return ApiResponse.forbidden(
+        "Only administrators can list faculty members",
+      );
     }
 
     const { searchParams } = new URL(req.url);
@@ -47,15 +49,23 @@ export async function POST(req: NextRequest) {
     }
 
     if (role !== UserRole.SUPER_ADMIN && role !== UserRole.SCHOOL_ADMIN) {
-      return ApiResponse.forbidden("Only administrators can create faculty profiles");
+      return ApiResponse.forbidden(
+        "Only administrators can create faculty profiles",
+      );
     }
 
     const body = await req.json();
     const facultyService = new FacultyService();
     const data = await facultyService.createFaculty(schoolId, body);
 
-    return ApiResponse.success(data, "Faculty profile created successfully", 201);
+    return ApiResponse.success(
+      data,
+      "Faculty profile created successfully",
+      201,
+    );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to create faculty profile");
+    return ApiResponse.badRequest(
+      error.message || "Failed to create faculty profile",
+    );
   }
 }
