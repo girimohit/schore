@@ -20,7 +20,7 @@ coverage
 
 # Vercel
 .vercel
-
+packages/database/src/generated/prisma
 # Build Outputs
 .next/
 out/

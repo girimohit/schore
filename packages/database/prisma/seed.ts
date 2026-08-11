@@ -1,12 +1,10 @@
 import {
-  PrismaClient,
   UserRole,
   UserStatus,
   SchoolStatus,
-} from "@prisma/client";
+} from "../src/generated/prisma/enums";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/index";
 
 async function main() {
   console.log("Seeding Demo School...");
