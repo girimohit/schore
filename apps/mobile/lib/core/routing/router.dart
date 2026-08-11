@@ -11,6 +11,8 @@ import '../../features/students/students_screen.dart';
 import '../../features/faculty/faculty_screen.dart';
 import '../../features/attendance/attendance_screen.dart';
 import '../../features/homework/homework_screen.dart';
+import '../../features/timetable/timetable_screen.dart';
+import '../../features/notices/notices_screen.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 
 // Shell Navigation screens placeholder.
@@ -93,11 +95,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/timetable',
-        builder: (context, state) => const PlaceholderScreen(title: 'Timetable'),
+        builder: (context, state) => const TimetableScreen(),
       ),
       GoRoute(
         path: '/notices',
-        builder: (context, state) => const PlaceholderScreen(title: 'Notices'),
+        builder: (context, state) => const NoticesScreen(),
       ),
       GoRoute(
         path: '/exams',
