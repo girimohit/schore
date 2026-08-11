@@ -15,6 +15,7 @@ import '../../features/timetable/timetable_screen.dart';
 import '../../features/notices/notices_screen.dart';
 import '../../features/exams/exams_screen.dart';
 import '../../features/remarks/remarks_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 
 // Shell Navigation screens placeholder.
@@ -117,7 +118,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const PlaceholderScreen(title: 'Profile'),
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
   );
