@@ -9,6 +9,8 @@ import '../../features/bootstrap/bootstrap_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/students/students_screen.dart';
 import '../../features/faculty/faculty_screen.dart';
+import '../../features/attendance/attendance_screen.dart';
+import '../../features/homework/homework_screen.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 
 // Shell Navigation screens placeholder.
@@ -83,11 +85,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/attendance',
-        builder: (context, state) => const PlaceholderScreen(title: 'Attendance'),
+        builder: (context, state) => const AttendanceScreen(),
       ),
       GoRoute(
         path: '/homework',
-        builder: (context, state) => const PlaceholderScreen(title: 'Homework'),
+        builder: (context, state) => const HomeworkScreen(),
       ),
       GoRoute(
         path: '/timetable',
