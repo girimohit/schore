@@ -1,6 +1,7 @@
 import { UserRepository } from "../repositories/user.repository";
 import { SchoolRepository } from "../repositories/school.repository";
 import { getPermissionsForRole } from "../utils/permissions";
+import { prisma } from "@schore/database";
 
 export class BootstrapService {
   private userRepository = new UserRepository();
@@ -21,6 +22,9 @@ export class BootstrapService {
       throw new Error("School not found");
     }
 
+    const platformConfig = await prisma.platformConfig.findFirst();
+    const maintenanceMode = platformConfig?.maintenanceMode ?? false;
+
     const minVersion = process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0";
     const latestVersion = process.env.LATEST_APP_VERSION || "1.0.0";
 
@@ -28,6 +32,16 @@ export class BootstrapService {
     if (appVersion) {
       forceUpdate = !this.isVersionCompatible(appVersion, minVersion);
     }
+
+    const sub = school.subscription;
+    const isSubscriptionExpired = sub
+      ? new Date(sub.endDate) < new Date()
+      : true;
+    const subscriptionStatus = sub
+      ? isSubscriptionExpired
+        ? "EXPIRED"
+        : sub.status
+      : "INACTIVE";
 
     return {
       user: {
@@ -39,6 +53,7 @@ export class BootstrapService {
         id: school.id,
         name: school.name,
         code: school.code,
+        status: school.status,
       },
       branding: school.branding,
       featureFlags: {
@@ -55,6 +70,12 @@ export class BootstrapService {
         latestVersion: latestVersion,
         forceUpdate,
       },
+      subscription: {
+        status: subscriptionStatus,
+        tier: sub?.plan || "NONE",
+        endDate: sub?.endDate || null,
+      },
+      maintenanceMode,
     };
   }
 

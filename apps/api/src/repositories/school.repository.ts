@@ -7,6 +7,7 @@ export class SchoolRepository {
       include: {
         branding: true,
         features: true,
+        subscription: true,
       },
     });
   }
