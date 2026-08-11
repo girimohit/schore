@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/auth/auth_notifier.dart';
-import 'core/auth/auth_state.dart';
+import 'core/routing/router.dart';
 import 'core/theme/theme_provider.dart';
-import 'features/auth/login_screen.dart';
-import 'features/bootstrap/bootstrap_screen.dart';
 
 void main() {
   runApp(
@@ -35,36 +33,15 @@ class _MyAppState extends ConsumerState<MyApp> {
     final themeMode = ref.watch(themeModeProvider);
     final lightTheme = ref.watch(appThemeProvider(false));
     final darkTheme = ref.watch(appThemeProvider(true));
-    final authState = ref.watch(authProvider);
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Schore ERP',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
       debugShowCheckedModeBanner: false,
-      home: _resolveHomeWidget(authState),
+      routerConfig: router,
     );
-  }
-
-  Widget _resolveHomeWidget(AuthState authState) {
-    switch (authState.status) {
-      case AuthStatus.initial:
-      case AuthStatus.loading:
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      case AuthStatus.authenticated:
-        return BootstrapScreen(
-          onBootstrapComplete: () {
-            // Placeholder: Routing navigation will manage this in Milestone 6
-          },
-        );
-      case AuthStatus.unauthenticated:
-      case AuthStatus.error:
-        return const LoginScreen();
-    }
   }
 }
