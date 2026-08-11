@@ -79,7 +79,9 @@ export async function POST(req: NextRequest) {
       201,
     );
   } catch (error: any) {
-    return ApiResponse.badRequest(error.message || "Failed to provision school");
+    return ApiResponse.badRequest(
+      error.message || "Failed to provision school",
+    );
   }
 }
 

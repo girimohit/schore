@@ -32,7 +32,8 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute =
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/refresh") ||
-    pathname.startsWith("/api/auth/logout");
+    pathname.startsWith("/api/auth/logout") ||
+    pathname.startsWith("/api/auth/invite");
 
   if (pathname.startsWith("/api") && !isAuthRoute) {
     const authHeader = request.headers.get("authorization");

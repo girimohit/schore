@@ -77,7 +77,9 @@ export class SchoolService {
       where: { email: input.adminEmail },
     });
     if (existingUser) {
-      throw new Error(`Admin user email "${input.adminEmail}" is already registered.`);
+      throw new Error(
+        `Admin user email "${input.adminEmail}" is already registered.`,
+      );
     }
 
     // 2. Database Transaction
@@ -123,7 +125,9 @@ export class SchoolService {
       // Create Subscription
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setDate(endDate.getDate() + (input.subscriptionDurationDays || 14));
+      endDate.setDate(
+        endDate.getDate() + (input.subscriptionDurationDays || 14),
+      );
       await tx.schoolSubscription.create({
         data: {
           schoolId: school.id,
