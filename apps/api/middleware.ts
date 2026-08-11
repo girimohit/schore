@@ -92,7 +92,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/auth/refresh") ||
     pathname.startsWith("/api/auth/logout") ||
     pathname.startsWith("/api/auth/invite") ||
-    pathname.startsWith("/api/health");
+    pathname.startsWith("/api/health") ||
+    pathname.startsWith("/api/admin");
 
   if (pathname.startsWith("/api") && !isAuthRoute) {
     const authHeader = request.headers.get("authorization");
