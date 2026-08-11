@@ -3,6 +3,7 @@ import {
   TimetableRepository,
   CreateTimetableInput,
 } from "../repositories/timetable.repository";
+import { enforceEntitlement } from "../utils/entitlements";
 
 export const createTimetableSchema = z.object({
   classId: z.string().min(1, "Class ID is required"),
@@ -32,6 +33,7 @@ export class TimetableService {
   private timetableRepository = new TimetableRepository();
 
   async createEntry(schoolId: string, input: unknown) {
+    await enforceEntitlement(schoolId, "timetable");
     const data = createTimetableSchema.parse(input);
 
     // 1. Conflict Check: Class/Section conflict
@@ -68,6 +70,7 @@ export class TimetableService {
   }
 
   async updateEntry(schoolId: string, id: string, input: unknown) {
+    await enforceEntitlement(schoolId, "timetable");
     const data = updateTimetableSchema.parse(input);
 
     const existing = await this.timetableRepository.findById(schoolId, id);
@@ -121,6 +124,7 @@ export class TimetableService {
   }
 
   async deleteEntry(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "timetable");
     const existing = await this.timetableRepository.findById(schoolId, id);
     if (!existing) {
       throw new Error("Timetable entry not found");
@@ -129,6 +133,7 @@ export class TimetableService {
   }
 
   async getEntryDetails(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "timetable");
     const entry = await this.timetableRepository.findById(schoolId, id);
     if (!entry) {
       throw new Error("Timetable entry not found");
@@ -141,10 +146,12 @@ export class TimetableService {
     classId: string,
     sectionId: string,
   ) {
+    await enforceEntitlement(schoolId, "timetable");
     return this.timetableRepository.findForClass(schoolId, classId, sectionId);
   }
 
   async getFacultyTimetable(schoolId: string, facultyId: string) {
+    await enforceEntitlement(schoolId, "timetable");
     return this.timetableRepository.findForFaculty(schoolId, facultyId);
   }
 }

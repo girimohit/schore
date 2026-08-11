@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ExamRepository } from "../repositories/exam.repository";
 import { StudentRepository } from "../repositories/student.repository";
 import { ExamStatus } from "@schore/database";
+import { enforceEntitlement } from "../utils/entitlements";
 
 const examStatusEnum = z.nativeEnum(ExamStatus);
 
@@ -46,20 +47,24 @@ export class ExamService {
   private studentRepository = new StudentRepository();
 
   async createExam(schoolId: string, input: unknown) {
+    await enforceEntitlement(schoolId, "exams");
     const data = createExamSchema.parse(input);
     return this.examRepository.createExam(schoolId, data);
   }
 
   async updateExam(schoolId: string, id: string, input: unknown) {
+    await enforceEntitlement(schoolId, "exams");
     const data = updateExamSchema.parse(input);
     return this.examRepository.updateExam(schoolId, id, data);
   }
 
   async deleteExam(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "exams");
     return this.examRepository.deleteExam(schoolId, id);
   }
 
   async getExamDetails(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "exams");
     const exam = await this.examRepository.findById(schoolId, id);
     if (!exam) {
       throw new Error("Exam not found");
@@ -76,6 +81,7 @@ export class ExamService {
       status?: ExamStatus;
     },
   ) {
+    await enforceEntitlement(schoolId, "exams");
     return this.examRepository.findExams(schoolId, options);
   }
 
@@ -83,6 +89,7 @@ export class ExamService {
   // EXAM SUBJECTS
   // ─────────────────────────────────────────────
   async addSubjectToExam(schoolId: string, examId: string, input: unknown) {
+    await enforceEntitlement(schoolId, "exams");
     const data = addSubjectToExamSchema.parse(input);
 
     // Verify exam exists in school
@@ -114,6 +121,7 @@ export class ExamService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "exams");
     const data = batchRecordResultSchema.parse(input);
 
     const exam = await this.examRepository.findById(schoolId, examId);
@@ -186,6 +194,7 @@ export class ExamService {
   }
 
   async getStudentResults(schoolId: string, studentId: string) {
+    await enforceEntitlement(schoolId, "exams");
     return this.examRepository.findStudentResults(schoolId, studentId);
   }
 
@@ -195,6 +204,7 @@ export class ExamService {
     userId: string,
     isFaculty: boolean,
   ) {
+    await enforceEntitlement(schoolId, "exams");
     const exam = await this.examRepository.findById(schoolId, examId);
     if (!exam) {
       throw new Error("Exam not found");

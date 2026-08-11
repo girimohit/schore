@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NoticeRepository } from "../repositories/notice.repository";
 import { StudentRepository } from "../repositories/student.repository";
 import { NoticeAudience } from "@schore/database";
+import { enforceEntitlement } from "../utils/entitlements";
 
 const audienceEnum = z.nativeEnum(NoticeAudience);
 
@@ -30,6 +31,7 @@ export class NoticeService {
   private studentRepository = new StudentRepository();
 
   async createNotice(schoolId: string, isFaculty: boolean, input: unknown) {
+    await enforceEntitlement(schoolId, "notices");
     const data = createNoticeSchema.parse(input);
 
     if (isFaculty) {
@@ -52,6 +54,7 @@ export class NoticeService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "notices");
     const data = updateNoticeSchema.parse(input);
 
     const existing = await this.noticeRepository.findById(schoolId, id);
@@ -74,6 +77,7 @@ export class NoticeService {
   }
 
   async deleteNotice(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "notices");
     const existing = await this.noticeRepository.findById(schoolId, id);
     if (!existing) {
       throw new Error("Notice not found");
@@ -82,6 +86,7 @@ export class NoticeService {
   }
 
   async getNoticeDetails(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "notices");
     const notice = await this.noticeRepository.findById(schoolId, id);
     if (!notice) {
       throw new Error("Notice not found");
@@ -90,6 +95,7 @@ export class NoticeService {
   }
 
   async getNoticesForUser(schoolId: string, role: string, userId: string) {
+    await enforceEntitlement(schoolId, "notices");
     let classId: string | undefined;
     let sectionId: string | undefined;
 

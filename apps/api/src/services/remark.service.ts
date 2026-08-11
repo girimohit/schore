@@ -2,6 +2,7 @@ import { z } from "zod";
 import { RemarkRepository } from "../repositories/remark.repository";
 import { FacultyRepository } from "../repositories/faculty.repository";
 import { RemarkCategory } from "@schore/database";
+import { enforceEntitlement } from "../utils/entitlements";
 
 const categoryEnum = z.nativeEnum(RemarkCategory);
 
@@ -26,6 +27,7 @@ export class RemarkService {
     role: string,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "remarks");
     const data = createRemarkSchema.parse(input);
 
     let facultyId: string | null = null;
@@ -50,6 +52,7 @@ export class RemarkService {
     role: string,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "remarks");
     const data = updateRemarkSchema.parse(input);
 
     const existing = await this.remarkRepository.findById(schoolId, id);
@@ -79,6 +82,7 @@ export class RemarkService {
     userId: string,
     role: string,
   ) {
+    await enforceEntitlement(schoolId, "remarks");
     const existing = await this.remarkRepository.findById(schoolId, id);
     if (!existing) {
       throw new Error("Remark not found");
@@ -101,6 +105,7 @@ export class RemarkService {
   }
 
   async getRemarksForStudent(schoolId: string, studentId: string) {
+    await enforceEntitlement(schoolId, "remarks");
     return this.remarkRepository.findForStudent(schoolId, studentId);
   }
 }

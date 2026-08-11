@@ -2,6 +2,7 @@ import { z } from "zod";
 import { HomeworkRepository } from "../repositories/homework.repository";
 import { AcademicRepository } from "../repositories/academic.repository";
 import { StudentRepository } from "../repositories/student.repository";
+import { enforceEntitlement } from "../utils/entitlements";
 
 export const createHomeworkSchema = z.object({
   classId: z.string().min(1, "Class ID is required"),
@@ -41,6 +42,7 @@ export class HomeworkService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     const data = createHomeworkSchema.parse(input);
 
     if (isFaculty) {
@@ -74,6 +76,7 @@ export class HomeworkService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     const data = updateHomeworkSchema.parse(input);
 
     if (isFaculty) {
@@ -95,6 +98,7 @@ export class HomeworkService {
     facultyId: string,
     isFaculty: boolean,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     if (isFaculty) {
       const homework = await this.homeworkRepository.findById(schoolId, id);
       if (!homework || homework.facultyId !== facultyId) {
@@ -105,6 +109,7 @@ export class HomeworkService {
   }
 
   async getHomeworkDetails(schoolId: string, id: string) {
+    await enforceEntitlement(schoolId, "homework");
     const homework = await this.homeworkRepository.findById(schoolId, id);
     if (!homework) {
       throw new Error("Homework not found");
@@ -121,10 +126,12 @@ export class HomeworkService {
       facultyId?: string;
     },
   ) {
+    await enforceEntitlement(schoolId, "homework");
     return this.homeworkRepository.findHomeworkList(schoolId, options);
   }
 
   async getStudentHomework(schoolId: string, studentId: string) {
+    await enforceEntitlement(schoolId, "homework");
     return this.homeworkRepository.findStudentAssignedHomework(
       schoolId,
       studentId,
@@ -137,6 +144,7 @@ export class HomeworkService {
     facultyId: string,
     isFaculty: boolean,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     if (isFaculty) {
       const homework = await this.homeworkRepository.findById(
         schoolId,
@@ -157,6 +165,7 @@ export class HomeworkService {
     userId: string,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     const data = submitHomeworkSchema.parse(input);
 
     // Resolve studentId from userId
@@ -189,6 +198,7 @@ export class HomeworkService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "homework");
     const data = reviewSubmissionSchema.parse(input);
 
     if (isFaculty) {

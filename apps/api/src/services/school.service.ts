@@ -304,4 +304,58 @@ export class SchoolService {
       data,
     });
   }
+
+  async updateBranding(
+    schoolId: string,
+    data: {
+      appName?: string;
+      logoUrl?: string;
+      splashImageUrl?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+      fontFamily?: string;
+      themeMode?: string;
+    },
+  ) {
+    return prisma.schoolBranding.update({
+      where: { schoolId },
+      data,
+    });
+  }
+
+  async updateFeatures(
+    schoolId: string,
+    data: {
+      attendance?: boolean;
+      homework?: boolean;
+      exams?: boolean;
+      notices?: boolean;
+      remarks?: boolean;
+      timetable?: boolean;
+    },
+  ) {
+    return prisma.schoolFeatures.update({
+      where: { schoolId },
+      data,
+    });
+  }
+
+  async checkFeatureEntitlement(
+    schoolId: string,
+    feature:
+      | "attendance"
+      | "homework"
+      | "exams"
+      | "notices"
+      | "remarks"
+      | "timetable",
+  ): Promise<boolean> {
+    const config = await prisma.schoolFeatures.findUnique({
+      where: { schoolId },
+    });
+    if (!config) {
+      return true;
+    }
+    return !!config[feature];
+  }
 }

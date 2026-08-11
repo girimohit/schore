@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AttendanceRepository } from "../repositories/attendance.repository";
 import { AttendanceStatus } from "@schore/database";
+import { enforceEntitlement } from "../utils/entitlements";
 
 const statusEnum = z.nativeEnum(AttendanceStatus);
 
@@ -35,6 +36,7 @@ export class AttendanceService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "attendance");
     const data = markAttendanceSchema.parse(input);
 
     // Faculty auth check
@@ -63,6 +65,7 @@ export class AttendanceService {
     isFaculty: boolean,
     input: unknown,
   ) {
+    await enforceEntitlement(schoolId, "attendance");
     const data = batchMarkAttendanceSchema.parse(input);
 
     if (isFaculty) {
@@ -101,6 +104,7 @@ export class AttendanceService {
     userId: string,
     isFaculty: boolean,
   ) {
+    await enforceEntitlement(schoolId, "attendance");
     if (isFaculty) {
       const isAuthorized =
         await this.attendanceRepository.isFacultyAssignedToSection(
@@ -124,6 +128,7 @@ export class AttendanceService {
     startDate?: Date,
     endDate?: Date,
   ) {
+    await enforceEntitlement(schoolId, "attendance");
     return this.attendanceRepository.findStudentAttendance(
       schoolId,
       studentId,
@@ -133,6 +138,7 @@ export class AttendanceService {
   }
 
   async getStudentAttendanceStats(schoolId: string, studentId: string) {
+    await enforceEntitlement(schoolId, "attendance");
     return this.attendanceRepository.getStudentStats(schoolId, studentId);
   }
 }
