@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../features/bootstrap/bootstrap_notifier.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/app_navigation_drawer.dart';
 
 class HomeworkScreen extends ConsumerStatefulWidget {
   const HomeworkScreen({super.key});
@@ -205,6 +206,7 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
       appBar: AppBar(
         title: const Text('Homework Assignments'),
       ),
+      drawer: const AppNavigationDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../features/bootstrap/bootstrap_notifier.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/app_navigation_drawer.dart';
 
 class AttendanceScreen extends ConsumerStatefulWidget {
   const AttendanceScreen({super.key});
@@ -137,6 +138,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       appBar: AppBar(
         title: const Text('Attendance'),
       ),
+      drawer: const AppNavigationDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : role == 'STUDENT'

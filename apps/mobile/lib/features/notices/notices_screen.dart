@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/app_navigation_drawer.dart';
 
 class NoticesScreen extends ConsumerStatefulWidget {
   const NoticesScreen({super.key});
@@ -114,6 +115,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
       appBar: AppBar(
         title: const Text('Notices & News'),
       ),
+      drawer: const AppNavigationDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null

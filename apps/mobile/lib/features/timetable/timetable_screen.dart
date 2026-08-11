@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/app_navigation_drawer.dart';
 
 class TimetableScreen extends ConsumerStatefulWidget {
   const TimetableScreen({super.key});
@@ -72,6 +73,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> with SingleTi
           tabs: _days.map((day) => Tab(text: day[0] + day.substring(1).toLowerCase())).toList(),
         ),
       ),
+      drawer: const AppNavigationDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null

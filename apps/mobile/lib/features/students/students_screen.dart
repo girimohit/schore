@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/spacing.dart';
+import '../../shared/widgets/app_navigation_drawer.dart';
 
 class StudentsScreen extends ConsumerStatefulWidget {
   const StudentsScreen({super.key});
@@ -150,6 +151,7 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
       appBar: AppBar(
         title: const Text('Students Directory'),
       ),
+      drawer: const AppNavigationDrawer(),
       body: Column(
         children: [
           Padding(
