@@ -27,52 +27,58 @@ export async function POST(req: NextRequest) {
     const { token, password } = result.data;
     const decoded = verifyInvitationToken(token);
 
-    const session = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({
-        where: { id: decoded.userId },
-        include: { school: true },
-      });
-
-      if (!user) {
-        throw new Error("Invitation user not found.");
-      }
-
-      if (user.status !== "INACTIVE") {
-        throw new Error("Invitation has already been accepted.");
-      }
-
-      const passwordHash = await bcrypt.hash(password, 12);
-
-      const updatedUser = await tx.user.update({
-        where: { id: user.id },
-        data: {
-          passwordHash,
-          status: "ACTIVE",
-        },
-      });
-
-      if (user.schoolId) {
-        await tx.school.update({
-          where: { id: user.schoolId },
-          data: { status: "ACTIVE" },
+    const session = await prisma.$transaction(
+      async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: decoded.userId },
+          include: { school: true },
         });
-      }
 
-      await tx.auditLog.create({
-        data: {
-          schoolId: user.schoolId,
-          userId: user.id,
-          action: "SCHOOL_ADMIN_ACTIVATION",
-          entity: "User",
-          entityId: user.id,
-          metadata: {
-            email: user.email,
+        if (!user) {
+          throw new Error("Invitation user not found.");
+        }
+
+        if (user.status !== "INACTIVE") {
+          throw new Error("Invitation has already been accepted.");
+        }
+
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        const updatedUser = await tx.user.update({
+          where: { id: user.id },
+          data: {
+            passwordHash,
+            status: "ACTIVE",
           },
-        },
-      });
+        });
 
-      return { user: updatedUser, school: user.school };
-    });
+        if (user.schoolId) {
+          await tx.school.update({
+            where: { id: user.schoolId },
+            data: { status: "ACTIVE" },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            schoolId: user.schoolId,
+            userId: user.id,
+            action: "SCHOOL_ADMIN_ACTIVATION",
+            entity: "User",
+            entityId: user.id,
+            metadata: {
+              email: user.email,
+            },
+          },
+        });
+
+        return { user: updatedUser, school: user.school };
+      },
+      {
+        maxWait: 20000,
+        timeout: 30000,
+      },
+    );
 
     const payload = {
       userId: session.user.id,
