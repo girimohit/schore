@@ -114,11 +114,19 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        final profile = student['profile'] ?? {};
         final enrollment = (student['enrollments'] as List?)?.firstOrNull ?? {};
         final activeClass = enrollment['class'] ?? {};
         final section = enrollment['section'] ?? {};
+
+        final firstName = student['firstName'] ?? '';
+        final lastName = student['lastName'] ?? '';
+        final email = student['email'] ?? 'N/A';
+        final phone = student['phone'] ?? 'N/A';
+        final dob = student['dateOfBirth']?.toString().split('T').first ?? 'N/A';
+        final parentName = student['parentName'] ?? 'N/A';
+        final parentPhone = student['parentPhone'] ?? 'N/A';
 
         return DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -126,72 +134,162 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
           minChildSize: 0.4,
           expand: false,
           builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: AppSpacing.paddingL,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      child: Text(
-                        '${profile['firstName']?[0] ?? ''}${profile['lastName']?[0] ?? ''}',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+            final theme = Theme.of(context);
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: AppSpacing.paddingL,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                  ),
-                  AppSpacing.heightM,
-                  Text(
-                    '${profile['firstName'] ?? ''} ${profile['lastName'] ?? ''}',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                    AppSpacing.heightL,
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                          ),
                         ),
-                    textAlign: TextAlign.center,
-                  ),
-                  Text(
-                    'Admission No: ${student['admissionNumber'] ?? ''}',
-                    style: const TextStyle(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  AppSpacing.heightL,
-                  const Divider(),
-                  _buildProfileRow('Class', activeClass['name'] ?? 'N/A'),
-                  _buildProfileRow('Section', section['name'] ?? 'N/A'),
-                  _buildProfileRow('Email', profile['email'] ?? 'N/A'),
-                  _buildProfileRow('Phone', profile['phone'] ?? 'N/A'),
-                  _buildProfileRow(
-                    'Date of Birth',
-                    profile['dob']?.toString().split('T').first ?? 'N/A',
-                  ),
-                  _buildProfileRow('Parent Name', student['parentName'] ?? 'N/A'),
-                  _buildProfileRow('Parent Phone', student['parentPhone'] ?? 'N/A'),
-                ],
-              ),
-            );
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: theme.colorScheme.surface,
+                          child: Text(
+                            '${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    AppSpacing.heightM,
+                    Text(
+                      '$firstName $lastName',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      'Admission No: ${student['admissionNumber'] ?? ''}',
+                      style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                    AppSpacing.heightL,
+                    
+                    // Academic Information Card
+                    Text('Academic Info', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    AppSpacing.heightS,
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant),
+                      ),
+                      child: Padding(
+                        padding: AppSpacing.paddingM,
+                        child: Column(
+                          children: [
+                            _buildProfileRow(Icons.school_outlined, 'Class', activeClass['name'] ?? 'N/A'),
+                            const Divider(height: 20),
+                            _buildProfileRow(Icons.grid_view_outlined, 'Section', section['name'] ?? 'N/A'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    AppSpacing.heightM,
+
+                    // Personal Details Card
+                    Text('Personal & Contact Info', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    AppSpacing.heightS,
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant),
+                      ),
+                      child: Padding(
+                        padding: AppSpacing.paddingM,
+                        child: Column(
+                          children: [
+                            _buildProfileRow(Icons.email_outlined, 'Email', email),
+                            const Divider(height: 20),
+                            _buildProfileRow(Icons.phone_outlined, 'Phone', phone),
+                            const Divider(height: 20),
+                            _buildProfileRow(Icons.cake_outlined, 'Date of Birth', dob),
+                          ],
+                        ),
+                      ),
+                    ),
+                    AppSpacing.heightM,
+
+                    // Parent / Guardian Card
+                    Text('Parent / Guardian Details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    AppSpacing.heightS,
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant),
+                      ),
+                      child: Padding(
+                        padding: AppSpacing.paddingM,
+                        child: Column(
+                          children: [
+                            _buildProfileRow(Icons.family_restroom_outlined, 'Parent Name', parentName),
+                            const Divider(height: 20),
+                            _buildProfileRow(Icons.phone_android_outlined, 'Parent Phone', parentPhone),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            };
           },
         );
       },
     );
   }
 
-  Widget _buildProfileRow(String label, String value) {
+  Widget _buildProfileRow(IconData icon, String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Icon(icon, color: theme.colorScheme.primary, size: 22),
+          AppSpacing.widthM,
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+            style: TextStyle(fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface.withOpacity(0.6)),
           ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -541,12 +639,14 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                             itemCount: _students.length,
                             itemBuilder: (context, index) {
                               final student = _students[index];
-                              final profile = student['profile'] ?? {};
                               final enrollment =
                                   (student['enrollments'] as List?)?.firstOrNull ??
                                       {};
                               final activeClass = enrollment['class'] ?? {};
                               final section = enrollment['section'] ?? {};
+
+                              final firstName = student['firstName'] ?? '';
+                              final lastName = student['lastName'] ?? '';
 
                               return Card(
                                 margin: const EdgeInsets.symmetric(
@@ -556,11 +656,11 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     child: Text(
-                                      '${profile['firstName']?[0] ?? ''}${profile['lastName']?[0] ?? ''}',
+                                      '${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}',
                                     ),
                                   ),
                                   title: Text(
-                                    '${profile['firstName'] ?? ''} ${profile['lastName'] ?? ''}',
+                                    '$firstName $lastName',
                                   ),
                                   subtitle: Text(
                                     'Class: ${activeClass['name'] ?? ''} - ${section['name'] ?? ''}',
