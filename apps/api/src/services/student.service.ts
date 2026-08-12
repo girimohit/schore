@@ -3,7 +3,9 @@ import {
   StudentRepository,
   FindStudentsOptions,
 } from "../repositories/student.repository";
-import { Gender, StudentStatus } from "@schore/database";
+import { Gender, StudentStatus, prisma } from "@schore/database";
+import bcrypt from "bcryptjs";
+import { generateInvitationToken } from "../utils/jwt";
 
 const genderEnum = z.nativeEnum(Gender);
 const studentStatusEnum = z.nativeEnum(StudentStatus);
@@ -48,10 +50,60 @@ export class StudentService {
 
   async createStudent(schoolId: string, input: unknown) {
     const data = createStudentSchema.parse(input);
-    return this.studentRepository.createStudent(schoolId, {
-      ...data,
-      photoUrl: data.photoUrl || undefined,
-      email: data.email || undefined,
+
+    return prisma.$transaction(async (tx) => {
+      let resolvedUserId = data.userId;
+
+      if (!resolvedUserId) {
+        // Auto-create corresponding User account
+        const email = data.email || `${data.admissionNumber.toLowerCase()}@schore.internal`;
+
+        // Check if user already exists
+        const existingUser = await tx.user.findFirst({
+          where: { email },
+        });
+
+        if (existingUser) {
+          throw new Error(`Email "${email}" is already registered.`);
+        }
+
+        const passwordHash = await bcrypt.hash("schore123", 12);
+        const newUser = await tx.user.create({
+          data: {
+            schoolId,
+            email,
+            phone: data.phone || null,
+            passwordHash,
+            role: "STUDENT",
+            status: "INACTIVE",
+          },
+        });
+        resolvedUserId = newUser.id;
+
+        // Generate invitation link & send invitation
+        const inviteToken = generateInvitationToken({
+          userId: newUser.id,
+          schoolId,
+          email,
+        });
+
+        const inviteLink = `http://localhost:3000/api/auth/invite?token=${inviteToken}`;
+        const { NotificationService } = await import("./notification.service");
+        const notificationService = new NotificationService();
+        await notificationService.sendInvitation({
+          email,
+          phone: data.phone || undefined,
+          role: "STUDENT",
+          inviteLink,
+        });
+      }
+
+      return this.studentRepository.createStudent(schoolId, {
+        ...data,
+        userId: resolvedUserId,
+        photoUrl: data.photoUrl || undefined,
+        email: data.email || undefined,
+      });
     });
   }
 
