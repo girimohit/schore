@@ -7,6 +7,8 @@ const REFRESH_SECRET =
   process.env.JWT_REFRESH_SECRET ||
   "default_refresh_secret_change_me_in_production";
 
+
+
 export interface JwtPayload {
   userId: string;
   schoolId: string;
