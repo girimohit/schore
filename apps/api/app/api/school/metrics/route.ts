@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@schore/database";
+import { prisma, UserRole, NoticeAudience } from "@schore/database";
 import { ApiResponse } from "../../../../src/utils/response";
-import { UserRole } from "@schore/database";
 import { AttendanceService } from "../../../../src/services/attendance.service";
 
 export async function GET(req: NextRequest) {
@@ -17,14 +16,17 @@ export async function GET(req: NextRequest) {
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Shared notices query (common to all roles)
+    const audienceList: NoticeAudience[] = [NoticeAudience.SCHOOL];
+    if (role === UserRole.FACULTY) {
+      audienceList.push(NoticeAudience.FACULTY);
+    } else if (role === UserRole.STUDENT) {
+      audienceList.push(NoticeAudience.STUDENTS);
+    }
+
     const recentNotices = await prisma.notice.findMany({
       where: {
         schoolId,
-        OR: [
-          { audience: "SCHOOL" },
-          role === "FACULTY" ? { audience: "FACULTY" } : {},
-          role === "STUDENT" ? { audience: "STUDENTS" } : {},
-        ].filter((o) => Object.keys(o).length > 0),
+        audience: { in: audienceList },
       },
       take: 5,
       orderBy: { createdAt: "desc" },
@@ -32,8 +34,7 @@ export async function GET(req: NextRequest) {
 
     if (
       role === UserRole.SUPER_ADMIN ||
-      role === UserRole.SCHOOL_ADMIN ||
-      role === UserRole.ADMIN
+      role === UserRole.SCHOOL_ADMIN
     ) {
       // 1. ADMIN METRICS
       const [totalStudents, totalFaculty, totalClasses, totalSections] =
