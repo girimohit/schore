@@ -197,6 +197,15 @@ export class SchoolService {
       email: result.user.email!,
     });
 
+    const inviteLink = `http://localhost:3000/api/auth/invite?token=${inviteToken}`;
+    const { NotificationService } = await import("./notification.service");
+    const notificationService = new NotificationService();
+    await notificationService.sendInvitation({
+      email: result.user.email!,
+      role: "SCHOOL_ADMIN",
+      inviteLink,
+    });
+
     return {
       school: result.school,
       user: result.user,
