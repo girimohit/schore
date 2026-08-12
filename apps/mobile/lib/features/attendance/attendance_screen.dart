@@ -22,6 +22,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   bool _isLoading = false;
   String? _message;
 
+  List<dynamic> _classes = [];
+  List<dynamic> _sections = [];
+
   // Student State
   List<dynamic> _studentLogs = [];
   double _attendanceRate = 0.0;
@@ -60,7 +63,39 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   }
 
   Future<void> _fetchClassList() async {
-    // In production we would query class listings; for now we initialize defaults from bootstrap
+    setState(() => _isLoading = true);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.dio.get('/api/classes');
+      if (response.statusCode == 200) {
+        setState(() {
+          _classes = response.data['data'] ?? [];
+        });
+      }
+    } catch (_) {
+      setState(() => _message = 'Failed to load classes.');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchSections(String classId) async {
+    setState(() => _isLoading = true);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.dio.get('/api/sections', queryParameters: {'classId': classId});
+      if (response.statusCode == 200) {
+        setState(() {
+          _sections = response.data['data'] ?? [];
+          _selectedSectionId = null;
+          _studentRegister = [];
+        });
+      }
+    } catch (_) {
+      setState(() => _message = 'Failed to load sections.');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadStudentRegister() async {
@@ -245,39 +280,130 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   // FACULTY VIEW (Select class + mark students)
   // ─────────────────────────────────────────────
   Widget _buildFacultyView(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: AppSpacing.paddingM,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Basic selection rows (Simulating class selectors using inputs for compilation safety)
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Class ID',
-                    hintText: 'e.g. class_uuid',
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Padding(
+              padding: AppSpacing.paddingM,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Class',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          value: _selectedClassId,
+                          items: _classes.map<DropdownMenuItem<String>>((c) {
+                            return DropdownMenuItem<String>(
+                              value: c['id'],
+                              child: Text(c['name'] ?? ''),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedClassId = val;
+                              });
+                              _fetchSections(val);
+                            }
+                          },
+                        ),
+                      ),
+                      AppSpacing.widthM,
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Section',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          value: _selectedSectionId,
+                          items: _sections.map<DropdownMenuItem<String>>((s) {
+                            return DropdownMenuItem<String>(
+                              value: s['id'],
+                              child: Text(s['name'] ?? ''),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedSectionId = val;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  onChanged: (val) => setState(() => _selectedClassId = val.trim()),
-                ),
-              ),
-              AppSpacing.widthM,
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Section ID',
-                    hintText: 'e.g. section_uuid',
+                  AppSpacing.heightM,
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2026, 1, 1),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _selectedDate = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: theme.colorScheme.outline),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today_outlined, color: theme.colorScheme.primary, size: 20),
+                          AppSpacing.widthM,
+                          Text(
+                            'Date: ${_selectedDate.toIso8601String().split('T').first}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Select Date',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  onChanged: (val) => setState(() => _selectedSectionId = val.trim()),
-                ),
+                  AppSpacing.heightM,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _loadStudentRegister,
+                      icon: const Icon(Icons.search),
+                      label: const Text('Load Student Register'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          AppSpacing.heightM,
-          ElevatedButton(
-            onPressed: _loadStudentRegister,
-            child: const Text('Load Student Register'),
+            ),
           ),
           AppSpacing.heightL,
           if (_studentRegister.isNotEmpty) ...[
@@ -286,21 +412,35 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 itemCount: _studentRegister.length,
                 itemBuilder: (context, index) {
                   final student = _studentRegister[index];
-                  final profile = student['profile'] ?? {};
                   final studentId = student['id'];
                   final currentStatus = _attendanceMap[studentId] ?? 'PRESENT';
 
+                  final firstName = student['firstName'] ?? '';
+                  final lastName = student['lastName'] ?? '';
+
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      title: Text('${profile['firstName'] ?? ''} ${profile['lastName'] ?? ''}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildStatusToggle(studentId, 'PRESENT', currentStatus, Colors.green),
-                          _buildStatusToggle(studentId, 'ABSENT', currentStatus, Colors.red),
-                          _buildStatusToggle(studentId, 'LATE', currentStatus, Colors.orange),
-                        ],
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          '$firstName $lastName',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildStatusToggle(studentId, 'PRESENT', currentStatus, Colors.green),
+                            _buildStatusToggle(studentId, 'ABSENT', currentStatus, Colors.red),
+                            _buildStatusToggle(studentId, 'LATE', currentStatus, Colors.orange),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -315,7 +455,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ] else
             const Expanded(
               child: Center(
-                child: Text('Enter Class & Section ID to retrieve register.'),
+                child: Text(
+                  'Select Class & Section to retrieve student register.',
+                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
               ),
             ),
         ],
@@ -328,13 +471,18 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: ChoiceChip(
-        label: Text(status[0]),
-        selected: isSelected,
-        selectedColor: activeColor.withOpacity(0.2),
-        labelStyle: TextStyle(
-          color: isSelected ? activeColor : Colors.grey,
-          fontWeight: FontWeight.bold,
+        label: Text(
+          status == 'PRESENT' ? 'P' : (status == 'ABSENT' ? 'A' : 'L'),
+          style: TextStyle(
+            color: isSelected ? Colors.white : activeColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        selected: isSelected,
+        selectedColor: activeColor,
+        backgroundColor: activeColor.withOpacity(0.08),
+        checkmarkColor: Colors.white,
+        showCheckmark: false,
         onSelected: (selected) {
           if (selected) {
             setState(() {
