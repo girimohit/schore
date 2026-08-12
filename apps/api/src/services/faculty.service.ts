@@ -62,10 +62,28 @@ export class FacultyService {
             phone: data.phone || null,
             passwordHash,
             role: "FACULTY",
-            status: "ACTIVE",
+            status: "INACTIVE",
           },
         });
         resolvedUserId = newUser.id;
+
+        // Generate invitation link & send invitation
+        const { generateInvitationToken } = await import("../utils/jwt");
+        const inviteToken = generateInvitationToken({
+          userId: newUser.id,
+          schoolId,
+          email,
+        });
+
+        const inviteLink = `http://localhost:3000/api/auth/invite?token=${inviteToken}`;
+        const { NotificationService } = await import("./notification.service");
+        const notificationService = new NotificationService();
+        await notificationService.sendInvitation({
+          email,
+          phone: data.phone || undefined,
+          role: "FACULTY",
+          inviteLink,
+        });
       }
 
       // Verify that this employeeId isn't already used in this school
