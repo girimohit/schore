@@ -1,7 +1,8 @@
 import { SchoolRepository } from "../repositories/school.repository";
 import { prisma } from "@schore/database";
-import { generateInvitationToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { NotificationService } from "./notification.service";
 
 export class SchoolService {
   private schoolRepository = new SchoolRepository();
@@ -158,11 +159,29 @@ export class SchoolService {
         const user = await tx.user.create({
           data: {
             schoolId: school.id,
-            email: input.adminEmail,
+            email: input.adminEmail.trim().toLowerCase(),
             phone: input.adminPhone,
             passwordHash,
             role: "SCHOOL_ADMIN",
             status: "INACTIVE",
+          },
+        });
+
+        // Generate secure invitation token
+        const inviteToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        // Create Invitation
+        await tx.invitation.create({
+          data: {
+            schoolId: school.id,
+            email: input.adminEmail.trim().toLowerCase(),
+            role: "SCHOOL_ADMIN",
+            token: inviteToken,
+            status: "INVITED",
+            expiresAt,
+            userId: user.id,
           },
         });
 
@@ -182,7 +201,7 @@ export class SchoolService {
           },
         });
 
-        return { school, user };
+        return { school, user, inviteToken };
       },
       {
         maxWait: 20000,
@@ -190,18 +209,12 @@ export class SchoolService {
       },
     );
 
-    // 3. Generate Secure Invitation Token
-    const inviteToken = generateInvitationToken({
-      userId: result.user.id,
-      schoolId: result.school.id,
-      email: result.user.email!,
-    });
-
-    const inviteLink = `http://localhost:3000/api/auth/invite?token=${inviteToken}`;
-    const { NotificationService } = await import("./notification.service");
+    // 3. Send Onboarding Invitation Link
+    const inviteLink = `http://localhost:3000/onboarding?token=${result.inviteToken}`;
     const notificationService = new NotificationService();
     await notificationService.sendInvitation({
       email: result.user.email!,
+      phone: result.user.phone || undefined,
       role: "SCHOOL_ADMIN",
       inviteLink,
     });
@@ -209,7 +222,7 @@ export class SchoolService {
     return {
       school: result.school,
       user: result.user,
-      inviteToken,
+      inviteToken: result.inviteToken,
     };
   }
 
