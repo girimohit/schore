@@ -571,11 +571,12 @@ class _AcademicSettingsScreenState extends ConsumerState<AcademicSettingsScreen>
         appBar: AppBar(
           title: const Text('Academic Configuration'),
           actions: [
-            TextButton.icon(
-              icon: const Icon(Icons.auto_awesome, color: Colors.amber),
-              label: const Text('Quick CBSE Setup', style: TextStyle(color: Colors.white)),
-              onPressed: _runCBSEQuickSetup,
-            ),
+            if (_classes.isEmpty)
+              TextButton.icon(
+                icon: const Icon(Icons.auto_awesome, color: Colors.amber),
+                label: const Text('Quick CBSE Setup', style: TextStyle(color: Colors.white)),
+                onPressed: _runCBSEQuickSetup,
+              ),
           ],
           bottom: const TabBar(
             tabs: [
