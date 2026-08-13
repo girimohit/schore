@@ -156,6 +156,22 @@ export class ExamService {
         );
       }
 
+      // Check if marks are locked
+      const submission = await prisma.marksSubmission.findFirst({
+        where: {
+          examId,
+          subjectId: subject.subjectId,
+          classId: exam.classId,
+          sectionId: exam.sectionId || null,
+        },
+      });
+
+      if (submission && (submission.status === "SUBMITTED_FOR_REVIEW" || submission.status === "FINALIZED")) {
+        throw new Error(
+          `Marks for subject ${subject.subject.name} are locked. (Status: ${submission.status})`
+        );
+      }
+
       const marks = record.marksObtained;
       if (Number(marks) > Number(subject.maxMarks)) {
         throw new Error(
@@ -195,7 +211,42 @@ export class ExamService {
 
   async getStudentResults(schoolId: string, studentId: string) {
     await enforceEntitlement(schoolId, "exams");
-    return this.examRepository.findStudentResults(schoolId, studentId);
+    const allResults = await this.examRepository.findStudentResults(schoolId, studentId);
+
+    const finalizedSubmissions = await prisma.marksSubmission.findMany({
+      where: {
+        schoolId,
+        status: "FINALIZED",
+      },
+    });
+
+    const finalizedSet = new Set(
+      finalizedSubmissions.map(
+        (s) => `${s.examId}:${s.subjectId}:${s.classId}:${s.sectionId || ""}`
+      )
+    );
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        enrollments: {
+          where: { status: "ACTIVE" },
+        },
+      },
+    });
+
+    const activeEnrollment = student?.enrollments?.[0];
+    const studentClassId = activeEnrollment?.classId || "";
+    const studentSectionId = activeEnrollment?.sectionId || "";
+
+    return allResults.filter((res) => {
+      const subjectId = res.examSubject.subjectId;
+      const examId = res.examId;
+      const key = `${examId}:${subjectId}:${studentClassId}:${studentSectionId}`;
+      const classKey = `${examId}:${subjectId}:${studentClassId}:`;
+
+      return finalizedSet.has(key) || finalizedSet.has(classKey);
+    });
   }
 
   async getExamResults(
