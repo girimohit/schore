@@ -556,8 +556,12 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                                     _fetchStudents();
                                   }
                                 } catch (err) {
+                                  String msg = err.toString();
+                                  if (err is DioException && err.response?.data != null) {
+                                    msg = err.response!.data['message'] ?? msg;
+                                  }
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to save student: ${err.toString()}')),
+                                    SnackBar(content: Text('Failed to save student: $msg')),
                                   );
                                 }
                               } else if (selectedDob == null) {

@@ -376,8 +376,12 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
                                     _fetchFaculty();
                                   }
                                 } catch (err) {
+                                  String msg = err.toString();
+                                  if (err is DioException && err.response?.data != null) {
+                                    msg = err.response!.data['message'] ?? msg;
+                                  }
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to save faculty: ${err.toString()}')),
+                                    SnackBar(content: Text('Failed to save faculty: $msg')),
                                   );
                                 }
                               }
