@@ -263,6 +263,81 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                         ),
                       ),
                     ),
+                    if (_isAdmin) ...[
+                      AppSpacing.heightL,
+                      const Divider(),
+                      AppSpacing.heightS,
+                      Text(
+                        'Administrative Actions',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      AppSpacing.heightS,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.send_outlined, size: 16),
+                              label: const Text('Resend Invite', style: TextStyle(fontSize: 12)),
+                              onPressed: () async {
+                                final userId = student['user']?['id'] ?? student['userId'];
+                                if (userId == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('This student has no associated user account.')),
+                                  );
+                                  return;
+                                }
+                                try {
+                                  final apiClient = ref.read(apiClientProvider);
+                                  final response = await apiClient.dio.post(
+                                    '/api/auth/invite/resend',
+                                    data: {'userId': userId},
+                                  );
+                                  if (response.statusCode == 200) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Onboarding invitation resent successfully!')),
+                                    );
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to resend: $e')),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.block_outlined, size: 16, color: Colors.red),
+                              label: const Text('Revoke / Suspend', style: TextStyle(fontSize: 12, color: Colors.red)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                              onPressed: () async {
+                                final userId = student['user']?['id'] ?? student['userId'];
+                                if (userId == null) return;
+                                try {
+                                  final apiClient = ref.read(apiClientProvider);
+                                  await apiClient.dio.post(
+                                    '/api/auth/invite/revoke',
+                                    data: {'userId': userId},
+                                  );
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Invitation revoked / User suspended successfully.')),
+                                  );
+                                  _fetchStudents();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to revoke: $e')),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
