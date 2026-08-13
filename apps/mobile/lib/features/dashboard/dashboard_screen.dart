@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/auth/auth_notifier.dart';
@@ -6,6 +7,7 @@ import '../../features/bootstrap/bootstrap_notifier.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/theme/radius.dart';
+import '../../core/theme/theme_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +22,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Map<String, dynamic> _stats = {};
   List<dynamic> _timetable = [];
   List<dynamic> _notices = [];
+  DateTime? _lastPressedAt;
 
   @override
   void initState() {
@@ -72,23 +75,92 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final role = user.role.toUpperCase();
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeModeProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          bootstrapState.config?.school.name ?? 'Schore Portal',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final now = DateTime.now();
+        if (_lastPressedAt == null ||
+            now.difference(_lastPressedAt!) > const Duration(seconds: 2)) {
+          _lastPressedAt = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit the application'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            bootstrapState.config?.school.name ?? 'Schore Portal',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            PopupMenuButton<ThemeMode>(
+              icon: const Icon(Icons.palette_outlined),
+              initialValue: themeMode,
+              onSelected: (mode) {
+                ref.read(themeModeProvider.notifier).setThemeMode(mode);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: ThemeMode.light,
+                  child: Row(
+                    children: [
+                      Icon(Icons.light_mode_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('Light Mode'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: ThemeMode.dark,
+                  child: Row(
+                    children: [
+                      Icon(Icons.dark_mode_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('Dark Mode'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: ThemeMode.system,
+                  child: Row(
+                    children: [
+                      Icon(Icons.settings_suggest_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('System Default'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            _isLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _fetchDashboardData,
+                  ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchDashboardData,
-          )
-        ],
-      ),
-      drawer: const AppNavigationDrawer(),
-      body: RefreshIndicator(
-        onRefresh: _fetchDashboardData,
+        drawer: const AppNavigationDrawer(),
+        body: RefreshIndicator(
+          onRefresh: _fetchDashboardData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: AppSpacing.paddingM,
@@ -149,7 +221,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
-    );
+    ),);
   }
 
   Widget _buildWelcomeBanner(BuildContext context, String email, String role) {
