@@ -2,10 +2,20 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
+let cachedPlatformConfig: any = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL
+
 export async function middleware(request: NextRequest) {
-  // CORS Preflight request
+  const start = performance.now();
+
+  console.log(
+    `→ ${request.method} ${request.nextUrl.pathname}`
+  );
+
+  // CORS Preflight
   if (request.method === "OPTIONS") {
-    return new NextResponse(null, {
+    const response = new NextResponse(null, {
       status: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -16,11 +26,18 @@ export async function middleware(request: NextRequest) {
         "Access-Control-Max-Age": "86400",
       },
     });
+
+    console.log(
+      `← ${request.method} ${request.nextUrl.pathname} ${response.status} (${(
+        performance.now() - start
+      ).toFixed(0)}ms)`
+    );
+
+    return response;
   }
 
   const response = await handleMiddleware(request);
 
-  // Attach CORS headers to standard response
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set(
     "Access-Control-Allow-Methods",
@@ -31,8 +48,46 @@ export async function middleware(request: NextRequest) {
     "Content-Type, Authorization, x-app-version, x-device-type, x-user-role, x-user-id, x-school-id, x-tenant-id",
   );
 
+  console.log(
+    `← ${request.method} ${request.nextUrl.pathname} ${response.status} (${(
+      performance.now() - start
+    ).toFixed(0)}ms)`
+  );
+
   return response;
 }
+
+// export async function middleware(request: NextRequest) {
+//   // CORS Preflight request
+//   if (request.method === "OPTIONS") {
+//     return new NextResponse(null, {
+//       status: 200,
+//       headers: {
+//         "Access-Control-Allow-Origin": "*",
+//         "Access-Control-Allow-Methods":
+//           "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+//         "Access-Control-Allow-Headers":
+//           "Content-Type, Authorization, x-app-version, x-device-type, x-user-role, x-user-id, x-school-id, x-tenant-id",
+//         "Access-Control-Max-Age": "86400",
+//       },
+//     });
+//   } 
+
+//   const response = await handleMiddleware(request);
+
+//   // Attach CORS headers to standard response
+//   response.headers.set("Access-Control-Allow-Origin", "*");
+//   response.headers.set(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+//   );
+//   response.headers.set(
+//     "Access-Control-Allow-Headers",
+//     "Content-Type, Authorization, x-app-version, x-device-type, x-user-role, x-user-id, x-school-id, x-tenant-id",
+//   );
+
+//   return response;
+// }
 
 async function handleMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -58,25 +113,32 @@ async function handleMiddleware(request: NextRequest) {
 
     if (!isDev) {
       try {
-        const configUrl = new URL("/api/admin/config", request.url);
-        const res = await fetch(configUrl, {
-          headers: {
-            "x-user-role": "SUPER_ADMIN",
-            "x-user-id": "middleware-internal",
-            "x-internal-request": "true",
-          },
-        });
-        const configData = await res.json();
+        const now = Date.now();
+        if (!cachedPlatformConfig || (now - lastCacheTime) > CACHE_TTL_MS) {
+          const configUrl = new URL("/api/admin/config", request.url);
+          const res = await fetch(configUrl, {
+            headers: {
+              "x-user-role": "SUPER_ADMIN",
+              "x-user-id": "middleware-internal",
+              "x-internal-request": "true",
+            },
+          });
+          const configData = await res.json();
 
-        if (configData.success && configData.data) {
-          const platformConfig = configData.data;
+          if (configData.success && configData.data) {
+            cachedPlatformConfig = configData.data;
+            lastCacheTime = now;
+          }
+        }
+
+        if (cachedPlatformConfig) {
           const isIos = deviceType.toLowerCase() === "ios";
           minSupportedVersion = isIos
-            ? platformConfig.minIosVersion
-            : platformConfig.minAndroidVersion;
+            ? cachedPlatformConfig.minIosVersion
+            : cachedPlatformConfig.minAndroidVersion;
           latestVersion = isIos
-            ? platformConfig.latestIosVersion
-            : platformConfig.latestAndroidVersion;
+            ? cachedPlatformConfig.latestIosVersion
+            : cachedPlatformConfig.latestAndroidVersion;
         }
       } catch (error) {
         console.error("Middleware platform config fetch failed:", error);
