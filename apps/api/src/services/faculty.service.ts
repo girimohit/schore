@@ -5,6 +5,8 @@ import {
 } from "../repositories/faculty.repository";
 import { UserStatus, prisma } from "@schore/database";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { NotificationService } from "./notification.service";
 
 const statusEnum = z.nativeEnum(UserStatus);
 
@@ -70,7 +72,6 @@ export class FacultyService {
         resolvedUserId = newUser.id;
 
         // Generate invitation token & save to db
-        const crypto = await import("crypto");
         const inviteToken = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
@@ -88,7 +89,6 @@ export class FacultyService {
         });
 
         const inviteLink = `http://localhost:3000/onboarding?token=${inviteToken}`;
-        const { NotificationService } = await import("./notification.service");
         const notificationService = new NotificationService();
         await notificationService.sendInvitation({
           email,
