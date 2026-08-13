@@ -119,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            if (!RegExp(r'^[\w-\.+]+@([\w-]+\.)+[\w-]{2,4}$')
                                 .hasMatch(value.trim())) {
                               return 'Please enter a valid email address';
                             }
