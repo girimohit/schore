@@ -168,20 +168,51 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
     final qualificationController = TextEditingController();
     DateTime? selectedJoiningDate;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
+        final theme = Theme.of(context);
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add Faculty Profile'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Add Faculty Profile',
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: empIdController,
                         decoration: const InputDecoration(labelText: 'Employee ID *'),
@@ -214,6 +245,7 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
                         decoration: const InputDecoration(labelText: 'Qualification'),
                       ),
                       ListTile(
+                        contentPadding: EdgeInsets.zero,
                         title: Text(
                           selectedJoiningDate == null
                               ? 'Select Joining Date'
@@ -232,52 +264,57 @@ class _FacultyScreenState extends ConsumerState<FacultyScreen> {
                           }
                         },
                       ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (formKey.currentState!.validate()) {
+                                try {
+                                  final apiClient = ref.read(apiClientProvider);
+                                  final response = await apiClient.dio.post(
+                                    '/api/faculty',
+                                    data: {
+                                      'employeeId': empIdController.text.trim(),
+                                      'firstName': firstNameController.text.trim(),
+                                      'lastName': lastNameController.text.trim(),
+                                      'email': emailController.text.trim(),
+                                      'phone': phoneController.text.trim(),
+                                      'designation': designationController.text.trim(),
+                                      'qualification': qualificationController.text.trim(),
+                                      if (selectedJoiningDate != null)
+                                        'joiningDate': selectedJoiningDate!.toIso8601String(),
+                                    },
+                                  );
+
+                                  if (response.statusCode == 201 || response.data['success'] == true) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Faculty profile created successfully!')),
+                                    );
+                                    _fetchFaculty();
+                                  }
+                                } catch (err) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to save faculty: ${err.toString()}')),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      try {
-                        final apiClient = ref.read(apiClientProvider);
-                        final response = await apiClient.dio.post(
-                          '/api/faculty',
-                          data: {
-                            'employeeId': empIdController.text.trim(),
-                            'firstName': firstNameController.text.trim(),
-                            'lastName': lastNameController.text.trim(),
-                            'email': emailController.text.trim(),
-                            'phone': phoneController.text.trim(),
-                            'designation': designationController.text.trim(),
-                            'qualification': qualificationController.text.trim(),
-                            if (selectedJoiningDate != null)
-                              'joiningDate': selectedJoiningDate!.toIso8601String(),
-                          },
-                        );
-
-                        if (response.statusCode == 201 || response.data['success'] == true) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Faculty profile created successfully!')),
-                          );
-                          _fetchFaculty();
-                        }
-                      } catch (err) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to save faculty: ${err.toString()}')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
