@@ -126,6 +126,8 @@ model School {
   exams           Exam[]
   results         Result[]
   remarks         StudentRemark[]
+  invitations     Invitation[]
+  marksSubmissions MarksSubmission[]
   branding        SchoolBranding?
   features        SchoolFeatures?
   subscription    SchoolSubscription?
@@ -149,6 +151,8 @@ model User {
   faculty       Faculty?
   auditLogs     AuditLog[]
   refreshTokens RefreshToken[]
+  invitation    Invitation?
+  marksSubmissions MarksSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -271,6 +275,7 @@ model Class {
   exams              Exam[]
   notices            Notice[]
   facultyAssignments FacultySubjectAssignment[]
+  marksSubmissions   MarksSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -291,8 +296,9 @@ model Section {
   attendance  Attendance[]
   homeworks   Homework[]
   timetables  Timetable[]
-  exams       Exam[]
-  notices     Notice[]
+  exams            Exam[]
+  notices          Notice[]
+  marksSubmissions MarksSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -312,8 +318,9 @@ model Subject {
   classes     ClassSubject[]
   faculty     FacultySubjectAssignment[]
   homeworks   Homework[]
-  timetables  Timetable[]
-  examSubjects ExamSubject[]
+  timetables       Timetable[]
+  examSubjects     ExamSubject[]
+  marksSubmissions MarksSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -606,8 +613,9 @@ model Exam {
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
   class        Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
   section      Section?     @relation(fields: [sectionId], references: [id], onDelete: SetNull)
-  subjects     ExamSubject[]
-  results      Result[]
+  subjects         ExamSubject[]
+  results          Result[]
+  marksSubmissions MarksSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -688,4 +696,63 @@ model RefreshToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+enum InvitationStatus {
+  INVITED
+  ONBOARDING
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model Invitation {
+  id        String           @id @default(cuid())
+  schoolId  String
+  email     String
+  role      UserRole
+  token     String           @unique
+  status    InvitationStatus @default(INVITED)
+  expiresAt DateTime
+  userId    String?          @unique
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, email])
+  @@index([schoolId])
+}
+
+enum MarksSubmissionStatus {
+  DRAFT
+  SUBMITTED_FOR_REVIEW
+  FINALIZED
+  SENT_BACK
+}
+
+model MarksSubmission {
+  id              String                @id @default(cuid())
+  schoolId        String
+  examId          String
+  subjectId       String
+  classId         String
+  sectionId       String?
+  teacherId       String
+  status          MarksSubmissionStatus @default(DRAFT)
+  remarks         String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  teacher User    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, subjectId, classId, sectionId])
+  @@index([schoolId])
 }
