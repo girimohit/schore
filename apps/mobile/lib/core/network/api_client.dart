@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
@@ -12,6 +13,7 @@ class ApiClient {
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 15),
         )) {
+    dio.interceptors.add(DeduplicationInterceptor());
     _initializeInterceptors();
   }
 
@@ -82,5 +84,75 @@ class ApiClient {
         error: true,
       ));
     }
+  }
+}
+
+class DeduplicationInterceptor extends Interceptor {
+  final Map<String, List<Completer<Response>>> _pending = {};
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.method != 'GET') {
+      return handler.next(options);
+    }
+
+    final key = '${options.uri.toString()}?${options.queryParameters.toString()}';
+
+    if (_pending.containsKey(key)) {
+      final completer = Completer<Response>();
+      _pending[key]!.add(completer);
+      completer.future.then((response) {
+        handler.resolve(response);
+      }).catchError((err) {
+        if (err is DioException) {
+          handler.reject(err);
+        } else {
+          handler.reject(DioException(
+            requestOptions: options,
+            error: err,
+          ));
+        }
+      });
+      return;
+    }
+
+    _pending[key] = [];
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.requestOptions.method != 'GET') {
+      return handler.next(response);
+    }
+
+    final key = '${response.requestOptions.uri.toString()}?${response.requestOptions.queryParameters.toString()}';
+    final completers = _pending.remove(key);
+
+    if (completers != null) {
+      for (final completer in completers) {
+        completer.complete(response);
+      }
+    }
+
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (err.requestOptions.method != 'GET') {
+      return handler.next(err);
+    }
+
+    final key = '${err.requestOptions.uri.toString()}?${err.requestOptions.queryParameters.toString()}';
+    final completers = _pending.remove(key);
+
+    if (completers != null) {
+      for (final completer in completers) {
+        completer.completeError(err);
+      }
+    }
+
+    handler.next(err);
   }
 }
