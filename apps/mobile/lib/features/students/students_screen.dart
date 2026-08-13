@@ -309,20 +309,51 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
     String selectedGender = 'MALE';
     DateTime? selectedDob;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
+        final theme = Theme.of(context);
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add Student Profile'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Add Student Profile',
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: admnNoController,
                         decoration: const InputDecoration(labelText: 'Admission Number *'),
@@ -356,6 +387,7 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                         onChanged: (v) => setDialogState(() => selectedGender = v!),
                       ),
                       ListTile(
+                        contentPadding: EdgeInsets.zero,
                         title: Text(
                           selectedDob == null
                               ? 'Select Date of Birth *'
@@ -411,57 +443,62 @@ class _StudentsScreenState extends ConsumerState<StudentsScreen> {
                         }).toList(),
                         onChanged: (v) => setDialogState(() => selectedSectionId = v),
                       ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (formKey.currentState!.validate() && selectedDob != null) {
+                                try {
+                                  final apiClient = ref.read(apiClientProvider);
+                                  final response = await apiClient.dio.post(
+                                    '/api/students',
+                                    data: {
+                                      'admissionNumber': admnNoController.text.trim(),
+                                      'firstName': firstNameController.text.trim(),
+                                      'lastName': lastNameController.text.trim(),
+                                      'email': emailController.text.trim(),
+                                      'phone': phoneController.text.trim(),
+                                      'gender': selectedGender,
+                                      'dateOfBirth': selectedDob!.toIso8601String(),
+                                      'academicYearId': selectedYearId,
+                                      'classId': selectedClassId,
+                                      'sectionId': selectedSectionId,
+                                    },
+                                  );
+
+                                  if (response.statusCode == 201 || response.data['success'] == true) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Student profile created successfully!')),
+                                    );
+                                    _fetchStudents();
+                                  }
+                                } catch (err) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to save student: ${err.toString()}')),
+                                  );
+                                }
+                              } else if (selectedDob == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Please pick a date of birth')),
+                                );
+                              }
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState!.validate() && selectedDob != null) {
-                      try {
-                        final apiClient = ref.read(apiClientProvider);
-                        final response = await apiClient.dio.post(
-                          '/api/students',
-                          data: {
-                            'admissionNumber': admnNoController.text.trim(),
-                            'firstName': firstNameController.text.trim(),
-                            'lastName': lastNameController.text.trim(),
-                            'email': emailController.text.trim(),
-                            'phone': phoneController.text.trim(),
-                            'gender': selectedGender,
-                            'dateOfBirth': selectedDob!.toIso8601String(),
-                            'academicYearId': selectedYearId,
-                            'classId': selectedClassId,
-                            'sectionId': selectedSectionId,
-                          },
-                        );
-
-                        if (response.statusCode == 201 || response.data['success'] == true) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Student profile created successfully!')),
-                          );
-                          _fetchStudents();
-                        }
-                      } catch (err) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to save student: ${err.toString()}')),
-                        );
-                      }
-                    } else if (selectedDob == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please pick a date of birth')),
-                      );
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
