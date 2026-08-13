@@ -13,7 +13,13 @@ const prismaClientSingleton = () => {
   const connectionString =
     process.env.DATABASE_URL ||
     "postgresql://postgres:postgres@localhost:5432/postgres";
-  const pool = new pg.Pool({ connectionString });
+  const isLocalhost =
+    connectionString.includes("localhost") ||
+    connectionString.includes("127.0.0.1");
+  const pool = new pg.Pool({
+    connectionString,
+    ssl: isLocalhost ? false : { rejectUnauthorized: false },
+  });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 };
