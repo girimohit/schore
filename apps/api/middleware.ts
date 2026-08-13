@@ -9,9 +9,9 @@ const CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL
 export async function middleware(request: NextRequest) {
   const start = performance.now();
 
-  console.log(
-    `→ ${request.method} ${request.nextUrl.pathname}`
-  );
+  // console.log(
+  //   `→ ${request.method} ${request.nextUrl.pathname}`
+  // );
 
   // CORS Preflight
   if (request.method === "OPTIONS") {
@@ -27,11 +27,11 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    console.log(
-      `← ${request.method} ${request.nextUrl.pathname} ${response.status} (${(
-        performance.now() - start
-      ).toFixed(0)}ms)`
-    );
+    // console.log(
+    //   `← ${request.method} ${request.nextUrl.pathname} ${response.status} (${(
+    //     performance.now() - start
+    //   ).toFixed(0)}ms)`
+    // );
 
     return response;
   }
@@ -168,7 +168,8 @@ async function handleMiddleware(request: NextRequest) {
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/refresh") ||
     pathname.startsWith("/api/auth/logout") ||
-    pathname.startsWith("/api/auth/invite") ||
+    pathname.startsWith("/api/auth/invite/validate") ||
+    pathname.startsWith("/api/auth/invite/accept") ||
     pathname.startsWith("/api/health") ||
     pathname.startsWith("/api/admin");
 
