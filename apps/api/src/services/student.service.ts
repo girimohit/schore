@@ -116,7 +116,7 @@ export class StudentService {
         userId: resolvedUserId,
         photoUrl: data.photoUrl || undefined,
         email: data.email || undefined,
-      });
+      }, tx);
     });
   }
 

@@ -32,10 +32,11 @@ export class StudentRepository {
       sectionId: string;
       rollNumber?: number;
     },
+    tx?: any,
   ) {
-    return prisma.$transaction(async (tx) => {
+    const execute = async (transaction: any) => {
       // 1. Create Student
-      const student = await tx.student.create({
+      const student = await transaction.student.create({
         data: {
           schoolId,
           userId: data.userId || null,
@@ -56,7 +57,7 @@ export class StudentRepository {
       });
 
       // 2. Create Enrollment for current academic year
-      await tx.studentEnrollment.create({
+      await transaction.studentEnrollment.create({
         data: {
           schoolId,
           studentId: student.id,
@@ -68,7 +69,13 @@ export class StudentRepository {
       });
 
       return student;
-    });
+    };
+
+    if (tx) {
+      return execute(tx);
+    } else {
+      return prisma.$transaction(execute);
+    }
   }
 
   async updateStudent(

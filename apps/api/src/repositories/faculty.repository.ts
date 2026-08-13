@@ -21,8 +21,10 @@ export class FacultyRepository {
       photoUrl?: string;
       joiningDate?: Date;
     },
+    tx?: any,
   ) {
-    return prisma.faculty.create({
+    const client = tx || prisma;
+    return client.faculty.create({
       data: {
         schoolId,
         userId: data.userId,
