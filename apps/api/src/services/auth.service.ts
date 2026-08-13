@@ -12,9 +12,14 @@ export class AuthService {
   private userRepository = new UserRepository();
 
   async login(email: string, password: string) {
-    const user = await this.userRepository.findByEmail(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.userRepository.findByEmail(normalizedEmail);
     if (!user) {
       throw new Error("Invalid email or password");
+    }
+
+    if (user.status !== "ACTIVE") {
+      throw new Error("Account is inactive. Please accept your invitation to activate your account.");
     }
 
     const isPasswordValid = await verifyPassword(password, user.passwordHash);
