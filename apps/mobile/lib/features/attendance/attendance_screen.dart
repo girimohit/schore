@@ -426,21 +426,25 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       side: BorderSide(color: theme.colorScheme.outlineVariant),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          '$firstName $lastName',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildStatusToggle(studentId, 'PRESENT', currentStatus, Colors.green),
-                            _buildStatusToggle(studentId, 'ABSENT', currentStatus, Colors.red),
-                            _buildStatusToggle(studentId, 'LATE', currentStatus, Colors.orange),
-                          ],
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '$firstName $lastName',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildStatusToggle(studentId, 'PRESENT', currentStatus, Colors.green),
+                              _buildStatusToggle(studentId, 'ABSENT', currentStatus, Colors.red),
+                              _buildStatusToggle(studentId, 'LATE', currentStatus, Colors.orange),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -471,6 +475,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: ChoiceChip(
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        labelPadding: EdgeInsets.zero,
         label: Text(
           status == 'PRESENT' ? 'P' : (status == 'ABSENT' ? 'A' : 'L'),
           style: TextStyle(
