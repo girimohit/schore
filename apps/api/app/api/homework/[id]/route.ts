@@ -10,8 +10,13 @@ export async function GET(
   try {
     const { id } = await props.params;
     const schoolId = req.headers.get("x-school-id");
+    const role = req.headers.get("x-user-role") as UserRole;
     if (!schoolId) {
       return ApiResponse.unauthorized("School context required");
+    }
+
+    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
+      return ApiResponse.forbidden("Administrators cannot view homework details");
     }
 
     const homeworkService = new HomeworkService();
@@ -37,6 +42,10 @@ export async function PUT(
 
     if (!schoolId || !role || !userId) {
       return ApiResponse.unauthorized("Authentication context missing");
+    }
+
+    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
+      return ApiResponse.forbidden("Administrators cannot modify homework");
     }
 
     if (role === UserRole.STUDENT) {
@@ -80,6 +89,10 @@ export async function DELETE(
 
     if (!schoolId || !role || !userId) {
       return ApiResponse.unauthorized("Authentication context missing");
+    }
+
+    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
+      return ApiResponse.forbidden("Administrators cannot delete homework");
     }
 
     if (role === UserRole.STUDENT) {

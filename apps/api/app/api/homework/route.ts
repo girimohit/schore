@@ -14,6 +14,10 @@ export async function GET(req: NextRequest) {
       return ApiResponse.unauthorized("Authentication context missing");
     }
 
+    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
+      return ApiResponse.forbidden("Administrators cannot view or manage homework");
+    }
+
     const homeworkService = new HomeworkService();
 
     if (role === UserRole.STUDENT) {
@@ -61,6 +65,10 @@ export async function POST(req: NextRequest) {
 
     if (!schoolId || !role || !userId) {
       return ApiResponse.unauthorized("Authentication context missing");
+    }
+
+    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
+      return ApiResponse.forbidden("Administrators cannot create homework assignments");
     }
 
     if (role === UserRole.STUDENT) {
