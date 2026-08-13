@@ -50,13 +50,16 @@ export class StudentService {
 
   async createStudent(schoolId: string, input: unknown) {
     const data = createStudentSchema.parse(input);
+    if (data.email) {
+      data.email = data.email.trim().toLowerCase();
+    }
 
     return prisma.$transaction(async (tx) => {
       let resolvedUserId = data.userId;
 
       if (!resolvedUserId) {
         // Auto-create corresponding User account
-        const email = data.email || `${data.admissionNumber.toLowerCase()}@schore.internal`;
+        const email = (data.email || `${data.admissionNumber.toLowerCase()}@schore.internal`).trim().toLowerCase();
 
         // Check if user already exists
         const existingUser = await tx.user.findFirst({
@@ -80,14 +83,25 @@ export class StudentService {
         });
         resolvedUserId = newUser.id;
 
-        // Generate invitation link & send invitation
-        const inviteToken = generateInvitationToken({
-          userId: newUser.id,
-          schoolId,
-          email,
+        // Generate invitation token & save to db
+        const crypto = await import("crypto");
+        const inviteToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        await tx.invitation.create({
+          data: {
+            schoolId,
+            email,
+            role: "STUDENT",
+            token: inviteToken,
+            status: "INVITED",
+            expiresAt,
+            userId: newUser.id,
+          },
         });
 
-        const inviteLink = `http://localhost:3000/api/auth/invite?token=${inviteToken}`;
+        const inviteLink = `http://localhost:3000/onboarding?token=${inviteToken}`;
         const { NotificationService } = await import("./notification.service");
         const notificationService = new NotificationService();
         await notificationService.sendInvitation({
