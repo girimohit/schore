@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
           examId,
           subjectId,
           classId,
-          sectionId: sectionId || null,
+          sectionId: (sectionId || null) as any,
         },
       },
       update: {

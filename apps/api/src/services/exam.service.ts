@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ExamRepository } from "../repositories/exam.repository";
 import { StudentRepository } from "../repositories/student.repository";
-import { ExamStatus } from "@schore/database";
+import { ExamStatus, prisma } from "@schore/database";
 import { enforceEntitlement } from "../utils/entitlements";
 
 const examStatusEnum = z.nativeEnum(ExamStatus);
@@ -222,7 +222,7 @@ export class ExamService {
 
     const finalizedSet = new Set(
       finalizedSubmissions.map(
-        (s) => `${s.examId}:${s.subjectId}:${s.classId}:${s.sectionId || ""}`
+        (s: any) => `${s.examId}:${s.subjectId}:${s.classId}:${s.sectionId || ""}`
       )
     );
 
