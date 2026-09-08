@@ -888,7 +888,7 @@ export default function AdminDashboard() {
                     password.
                   </span>
                   <div className={styles.tokenBox}>
-                    {window.location.origin}/api/auth/invite?token=
+                    {window.location.origin}/onboarding?token=
                     {provisionSuccess.inviteToken}
                   </div>
                 </div>
