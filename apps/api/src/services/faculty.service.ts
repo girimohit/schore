@@ -88,7 +88,8 @@ export class FacultyService {
           },
         });
 
-        const inviteLink = `http://localhost:3000/onboarding?token=${inviteToken}`;
+        const baseUrl = process.env.APP_BASE_URL;
+        const inviteLink = `${baseUrl}/onboarding?token=${inviteToken}`;
         const notificationService = new NotificationService();
         await notificationService.sendInvitation({
           email,

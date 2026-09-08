@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    const inviteLink = `http://localhost:3000/onboarding?token=${inviteToken}`;
+    const baseUrl = process.env.APP_BASE_URL;
+    const inviteLink = `${baseUrl}/onboarding?token=${inviteToken}`;
     const { NotificationService } = await import("../../../../../src/services/notification.service");
     const notificationService = new NotificationService();
     await notificationService.sendInvitation({

@@ -170,7 +170,7 @@ export class SchoolService {
         // Generate secure invitation token
         const inviteToken = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        expiresAt.setDate(expiresAt.getDate() + 10);
 
         // Create Invitation
         await tx.invitation.create({
@@ -210,7 +210,8 @@ export class SchoolService {
     );
 
     // 3. Send Onboarding Invitation Link
-    const inviteLink = `http://localhost:3000/onboarding?token=${result.inviteToken}`;
+    const baseUrl = process.env.APP_BASE_URL;
+    const inviteLink = `${baseUrl}/onboarding?token=${result.inviteToken}`;
     const notificationService = new NotificationService();
     await notificationService.sendInvitation({
       email: result.user.email!,
