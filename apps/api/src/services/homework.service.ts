@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { prisma } from "@schore/database";
 import { HomeworkRepository } from "../repositories/homework.repository";
 import { AcademicRepository } from "../repositories/academic.repository";
 import { StudentRepository } from "../repositories/student.repository";
@@ -12,7 +13,7 @@ export const createHomeworkSchema = z.object({
   description: z.string().optional(),
   attachmentUrl: z.string().url().optional().or(z.literal("")),
   dueDate: z.coerce.date(),
-  academicYearId: z.string().min(1, "Academic Year ID is required"),
+  academicYearId: z.string().optional(),
 });
 
 export const updateHomeworkSchema = z.object({
@@ -45,15 +46,25 @@ export class HomeworkService {
     await enforceEntitlement(schoolId, "homework");
     const data = createHomeworkSchema.parse(input);
 
+    let academicYearId = data.academicYearId;
+    if (!academicYearId) {
+      const currentAy =
+        (await prisma.academicYear.findFirst({
+          where: { schoolId, isCurrent: true },
+        })) ||
+        (await prisma.academicYear.findFirst({
+          where: { schoolId },
+          orderBy: { startDate: "desc" },
+        }));
+      if (!currentAy) {
+        throw new Error(
+          "No academic year found for school. Please configure an academic year first.",
+        );
+      }
+      academicYearId = currentAy.id;
+    }
+
     if (isFaculty) {
-      // Verify faculty is assigned to this section/class
-      const isAuthorized = await this.academicRepository.assignFacultySubject({
-        facultyId,
-        subjectId: data.subjectId,
-        classId: data.classId,
-        sectionId: data.sectionId,
-      }); // We can use findFirst check in repository, or call database check
-      // Let's do a simple check:
       const assigned = await this.academicRepository.findSectionById(
         schoolId,
         data.sectionId,
@@ -65,6 +76,7 @@ export class HomeworkService {
 
     return this.homeworkRepository.createHomework(schoolId, facultyId, {
       ...data,
+      academicYearId,
       attachmentUrl: data.attachmentUrl || undefined,
     });
   }

@@ -98,7 +98,7 @@ class AppNavigationDrawer extends ConsumerWidget {
               },
             ),
 
-          if (flags.homework && role != 'ADMIN' && role != 'SUPERADMIN' && role != 'SCHOOL_ADMIN')
+          if (flags.homework)
             ListTile(
               leading: const Icon(Icons.assignment_outlined),
               title: const Text('Homework'),

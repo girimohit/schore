@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { HomeworkService } from "../../../../src/services/homework.service";
+import { FacultyService } from "../../../../src/services/faculty.service";
 import { ApiResponse } from "../../../../src/utils/response";
 import { UserRole } from "@schore/database";
 
@@ -10,13 +11,8 @@ export async function GET(
   try {
     const { id } = await props.params;
     const schoolId = req.headers.get("x-school-id");
-    const role = req.headers.get("x-user-role") as UserRole;
     if (!schoolId) {
       return ApiResponse.unauthorized("School context required");
-    }
-
-    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
-      return ApiResponse.forbidden("Administrators cannot view homework details");
     }
 
     const homeworkService = new HomeworkService();
@@ -44,10 +40,6 @@ export async function PUT(
       return ApiResponse.unauthorized("Authentication context missing");
     }
 
-    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
-      return ApiResponse.forbidden("Administrators cannot modify homework");
-    }
-
     if (role === UserRole.STUDENT) {
       return ApiResponse.forbidden(
         "Students cannot update homework assignments",
@@ -58,10 +50,17 @@ export async function PUT(
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
+    let facultyId = "";
+    if (isFaculty) {
+      const facultyService = new FacultyService();
+      const faculty = await facultyService.getFacultyByUserId(schoolId, userId);
+      facultyId = faculty.id;
+    }
+
     const data = await homeworkService.updateHomework(
       schoolId,
       id,
-      userId,
+      facultyId,
       isFaculty,
       body,
     );
@@ -91,10 +90,6 @@ export async function DELETE(
       return ApiResponse.unauthorized("Authentication context missing");
     }
 
-    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
-      return ApiResponse.forbidden("Administrators cannot delete homework");
-    }
-
     if (role === UserRole.STUDENT) {
       return ApiResponse.forbidden(
         "Students cannot delete homework assignments",
@@ -104,7 +99,14 @@ export async function DELETE(
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
-    await homeworkService.deleteHomework(schoolId, id, userId, isFaculty);
+    let facultyId = "";
+    if (isFaculty) {
+      const facultyService = new FacultyService();
+      const faculty = await facultyService.getFacultyByUserId(schoolId, userId);
+      facultyId = faculty.id;
+    }
+
+    await homeworkService.deleteHomework(schoolId, id, facultyId, isFaculty);
 
     return ApiResponse.success(
       null,
@@ -116,3 +118,4 @@ export async function DELETE(
     );
   }
 }
+

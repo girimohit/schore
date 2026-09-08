@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { HomeworkService } from "../../../src/services/homework.service";
 import { StudentService } from "../../../src/services/student.service";
+import { FacultyService } from "../../../src/services/faculty.service";
 import { ApiResponse } from "../../../src/utils/response";
-import { UserRole } from "@schore/database";
+import { UserRole, prisma } from "@schore/database";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,10 +13,6 @@ export async function GET(req: NextRequest) {
 
     if (!schoolId || !role || !userId) {
       return ApiResponse.unauthorized("Authentication context missing");
-    }
-
-    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
-      return ApiResponse.forbidden("Administrators cannot view or manage homework");
     }
 
     const homeworkService = new HomeworkService();
@@ -39,10 +36,17 @@ export async function GET(req: NextRequest) {
     const classId = searchParams.get("classId") || undefined;
     const sectionId = searchParams.get("sectionId") || undefined;
     const subjectId = searchParams.get("subjectId") || undefined;
-    const facultyId =
-      role === UserRole.FACULTY
-        ? userId
-        : searchParams.get("facultyId") || undefined;
+
+    let facultyId = searchParams.get("facultyId") || undefined;
+    if (role === UserRole.FACULTY && !facultyId) {
+      const facultyService = new FacultyService();
+      try {
+        const faculty = await facultyService.getFacultyByUserId(schoolId, userId);
+        facultyId = faculty.id;
+      } catch {
+        // if faculty profile not found yet, fall back to undefined
+      }
+    }
 
     const data = await homeworkService.getHomeworkList(schoolId, {
       classId,
@@ -67,10 +71,6 @@ export async function POST(req: NextRequest) {
       return ApiResponse.unauthorized("Authentication context missing");
     }
 
-    if (role === UserRole.SCHOOL_ADMIN || role === UserRole.SUPER_ADMIN) {
-      return ApiResponse.forbidden("Administrators cannot create homework assignments");
-    }
-
     if (role === UserRole.STUDENT) {
       return ApiResponse.forbidden(
         "Students cannot create homework assignments",
@@ -81,9 +81,26 @@ export async function POST(req: NextRequest) {
     const homeworkService = new HomeworkService();
     const isFaculty = role === UserRole.FACULTY;
 
+    let targetFacultyId = body.facultyId;
+
+    if (isFaculty) {
+      const facultyService = new FacultyService();
+      const faculty = await facultyService.getFacultyByUserId(schoolId, userId);
+      targetFacultyId = faculty.id;
+    } else if (!targetFacultyId) {
+      // For Admin, if not specified, find first faculty or create with first available faculty in school
+      const firstFaculty = await prisma.faculty.findFirst({
+        where: { schoolId },
+      });
+      if (!firstFaculty) {
+        return ApiResponse.badRequest("No faculty registered in this school to assign homework with. Please add faculty first.");
+      }
+      targetFacultyId = firstFaculty.id;
+    }
+
     const data = await homeworkService.createHomework(
       schoolId,
-      userId,
+      targetFacultyId,
       isFaculty,
       body,
     );
@@ -99,3 +116,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
