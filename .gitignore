@@ -37,3 +37,6 @@ yarn-error.log*
 .DS_Store
 *.pem
 cred.txt
+features.txt
+invitations_sent.txt
+strangeFile
