@@ -38,7 +38,11 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen>
     super.initState();
     _tabController = TabController(length: _days.length, vsync: this);
     _fetchTimetable();
-    _fetchClasses();
+    final bootstrap = ref.read(bootstrapProvider);
+    final role = bootstrap.config?.user?.role.toUpperCase() ?? '';
+    if (role == 'SCHOOL_ADMIN' || role == 'SUPER_ADMIN' || role == 'ADMIN') {
+      _fetchClasses();
+    }
   }
 
   @override
@@ -165,12 +169,16 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen>
         );
         _fetchTimetable();
       }
-    } catch (err: any) {
+    } catch (err) {
+      dynamic errorMsg = 'Failed to delete timetable slot.';
+      if (err is dynamic) {
+        try {
+          errorMsg = (err as dynamic)?.response?.data?['message'] ?? errorMsg;
+        } catch (_) {}
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            err?.response?.data?['message'] ?? 'Failed to delete timetable slot.',
-          ),
+          content: Text(errorMsg.toString()),
         ),
       );
     }
@@ -484,13 +492,16 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen>
                             ),
                           );
                           _fetchTimetable();
-                        } catch (err: any) {
+                        } catch (err) {
+                          dynamic errorMsg = 'Failed to save timetable slot';
+                          if (err is dynamic) {
+                            try {
+                              errorMsg = (err as dynamic)?.response?.data?['message'] ?? errorMsg;
+                            } catch (_) {}
+                          }
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                err?.response?.data?['message'] ??
-                                    'Failed to save timetable slot',
-                              ),
+                              content: Text(errorMsg.toString()),
                             ),
                           );
                         }

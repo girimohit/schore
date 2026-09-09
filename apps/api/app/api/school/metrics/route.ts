@@ -85,10 +85,13 @@ export async function GET(req: NextRequest) {
       }
 
       // Counts timetable slots for this faculty today
+      const jsDay = new Date().getDay();
+      const todayDayOfWeek = jsDay === 0 ? 7 : jsDay;
       const classesToday = await prisma.timetable.count({
         where: {
           schoolId,
           facultyId: faculty.id,
+          dayOfWeek: todayDayOfWeek,
         },
       });
 
@@ -156,16 +159,15 @@ export async function GET(req: NextRequest) {
       );
 
       // Timetable today
-      const todayDayOfWeek = new Date()
-        .toLocaleDateString("en-US", { weekday: "long" })
-        .toUpperCase();
+      const jsDay = new Date().getDay();
+      const todayDayOfWeek = jsDay === 0 ? 7 : jsDay; // 1 = Monday ... 7 = Sunday
 
       const timetable = await prisma.timetable.findMany({
         where: {
           schoolId,
           classId,
           sectionId,
-          dayOfWeek: todayDayOfWeek as any,
+          dayOfWeek: todayDayOfWeek,
         },
         include: {
           subject: true,

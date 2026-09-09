@@ -324,9 +324,15 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                             ),
                           );
                           _fetchHomework();
-                        } catch (err: any) {
+                        } catch (err) {
+                          dynamic errorMsg = 'Failed to save homework';
+                          if (err is dynamic) {
+                            try {
+                              errorMsg = (err as dynamic)?.response?.data?['message'] ?? errorMsg;
+                            } catch (_) {}
+                          }
                           ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(content: Text(err?.response?.data?['message'] ?? 'Failed to save homework')),
+                            SnackBar(content: Text(errorMsg.toString())),
                           );
                         }
                       },

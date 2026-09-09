@@ -152,7 +152,7 @@ async function handleMiddleware(request: NextRequest) {
           message: "A newer version of the app is required. Please update.",
           code: "FORCE_UPDATE",
           minimumSupportedVersion: minSupportedVersion,
-          latestVersion,
+          latestVersion,  
         }),
         {
           status: 426,
