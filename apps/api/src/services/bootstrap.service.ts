@@ -12,17 +12,20 @@ export class BootstrapService {
     schoolId: string,
     appVersion: string | null,
   ) {
-    const user = await this.userRepository.findById(userId);
+    const [user, school, platformConfig] = await Promise.all([
+      this.userRepository.findById(userId),
+      this.schoolRepository.findById(schoolId),
+      prisma.platformConfig.findFirst(),
+    ]);
+
     if (!user) {
       throw new Error("User not found");
     }
 
-    const school = await this.schoolRepository.findById(schoolId);
     if (!school) {
       throw new Error("School not found");
     }
 
-    const platformConfig = await prisma.platformConfig.findFirst();
     const maintenanceMode = platformConfig?.maintenanceMode ?? false;
 
     const minVersion = process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0";

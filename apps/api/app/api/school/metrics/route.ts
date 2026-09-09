@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     const todayStr = new Date().toISOString().split("T")[0];
 
-    // Shared notices query (common to all roles)
+    // Shared notices audience filter
     const audienceList: NoticeAudience[] = [NoticeAudience.SCHOOL];
     if (role === UserRole.FACULTY) {
       audienceList.push(NoticeAudience.FACULTY);
@@ -23,39 +23,42 @@ export async function GET(req: NextRequest) {
       audienceList.push(NoticeAudience.STUDENTS);
     }
 
-    const recentNotices = await prisma.notice.findMany({
-      where: {
-        schoolId,
-        audience: { in: audienceList },
-      },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-    });
-
     if (
       role === UserRole.SUPER_ADMIN ||
       role === UserRole.SCHOOL_ADMIN
     ) {
-      // 1. ADMIN METRICS
-      const [totalStudents, totalFaculty, totalClasses, totalSections] =
-        await Promise.all([
-          prisma.student.count({ where: { schoolId } }),
-          prisma.faculty.count({ where: { schoolId } }),
-          prisma.class.count({ where: { schoolId } }),
-          prisma.section.count({ where: { schoolId } }),
-        ]);
-
-      // Count sections with attendance submitted today
-      const sectionsWithAttendanceToday = await prisma.attendance.groupBy({
-        by: ["sectionId"],
-        where: {
-          schoolId,
-          date: {
-            gte: new Date(todayStr + "T00:00:00.000Z"),
-            lte: new Date(todayStr + "T23:59:59.999Z"),
+      // 1. ADMIN METRICS (All queries parallelized concurrently)
+      const [
+        totalStudents,
+        totalFaculty,
+        totalClasses,
+        totalSections,
+        sectionsWithAttendanceToday,
+        recentNotices,
+      ] = await Promise.all([
+        prisma.student.count({ where: { schoolId } }),
+        prisma.faculty.count({ where: { schoolId } }),
+        prisma.class.count({ where: { schoolId } }),
+        prisma.section.count({ where: { schoolId } }),
+        prisma.attendance.groupBy({
+          by: ["sectionId"],
+          where: {
+            schoolId,
+            date: {
+              gte: new Date(todayStr + "T00:00:00.000Z"),
+              lte: new Date(todayStr + "T23:59:59.999Z"),
+            },
           },
-        },
-      });
+        }),
+        prisma.notice.findMany({
+          where: {
+            schoolId,
+            audience: { in: audienceList },
+          },
+          take: 5,
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
 
       const unmarkedAttendance = Math.max(
         0,
@@ -76,9 +79,19 @@ export async function GET(req: NextRequest) {
 
     if (role === UserRole.FACULTY) {
       // 2. FACULTY METRICS
-      const faculty = await prisma.faculty.findUnique({
-        where: { userId },
-      });
+      const [faculty, recentNotices] = await Promise.all([
+        prisma.faculty.findUnique({
+          where: { userId },
+        }),
+        prisma.notice.findMany({
+          where: {
+            schoolId,
+            audience: { in: audienceList },
+          },
+          take: 5,
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
 
       if (!faculty) {
         return ApiResponse.badRequest("Faculty profile not found");
@@ -87,15 +100,8 @@ export async function GET(req: NextRequest) {
       // Counts timetable slots for this faculty today
       const jsDay = new Date().getDay();
       const todayDayOfWeek = jsDay === 0 ? 7 : jsDay;
-      const classesToday = await prisma.timetable.count({
-        where: {
-          schoolId,
-          facultyId: faculty.id,
-          dayOfWeek: todayDayOfWeek,
-        },
-      });
 
-      // Find how many unique sections this faculty is assigned to
+      // Find unique sections this faculty is assigned to
       const assignments = await prisma.facultySubjectAssignment.findMany({
         where: { facultyId: faculty.id },
         select: { sectionId: true },
@@ -104,18 +110,29 @@ export async function GET(req: NextRequest) {
         new Set(assignments.map((a) => a.sectionId).filter(Boolean)),
       ) as string[];
 
-      // Check attendance submissions by this faculty today
-      const submittedSectionsToday = await prisma.attendance.groupBy({
-        by: ["sectionId"],
-        where: {
-          schoolId,
-          sectionId: { in: assignedSectionIds },
-          date: {
-            gte: new Date(todayStr + "T00:00:00.000Z"),
-            lte: new Date(todayStr + "T23:59:59.999Z"),
+      // Parallelize timetable slot count & attendance submission check
+      const [classesToday, submittedSectionsToday] = await Promise.all([
+        prisma.timetable.count({
+          where: {
+            schoolId,
+            facultyId: faculty.id,
+            dayOfWeek: todayDayOfWeek,
           },
-        },
-      });
+        }),
+        assignedSectionIds.length > 0
+          ? prisma.attendance.groupBy({
+              by: ["sectionId"],
+              where: {
+                schoolId,
+                sectionId: { in: assignedSectionIds },
+                date: {
+                  gte: new Date(todayStr + "T00:00:00.000Z"),
+                  lte: new Date(todayStr + "T23:59:59.999Z"),
+                },
+              },
+            })
+          : Promise.resolve([]),
+      ]);
 
       const unmarkedAttendance = Math.max(
         0,
@@ -134,14 +151,24 @@ export async function GET(req: NextRequest) {
 
     if (role === UserRole.STUDENT) {
       // 3. STUDENT METRICS
-      const student = await prisma.student.findUnique({
-        where: { userId },
-        include: {
-          enrollments: {
-            include: { class: true, section: true },
+      const [student, recentNotices] = await Promise.all([
+        prisma.student.findUnique({
+          where: { userId },
+          include: {
+            enrollments: {
+              include: { class: true, section: true },
+            },
           },
-        },
-      });
+        }),
+        prisma.notice.findMany({
+          where: {
+            schoolId,
+            audience: { in: audienceList },
+          },
+          take: 5,
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
 
       if (!student) {
         return ApiResponse.badRequest("Student profile not found");
@@ -151,43 +178,45 @@ export async function GET(req: NextRequest) {
       const classId = activeEnrollment?.classId;
       const sectionId = activeEnrollment?.sectionId;
 
-      // Get attendance rate percentage
-      const attendanceService = new AttendanceService();
-      const attendanceStats = await attendanceService.getStudentAttendanceStats(
-        schoolId,
-        student.id,
-      );
-
-      // Timetable today
       const jsDay = new Date().getDay();
       const todayDayOfWeek = jsDay === 0 ? 7 : jsDay; // 1 = Monday ... 7 = Sunday
+      const attendanceService = new AttendanceService();
 
-      const timetable = await prisma.timetable.findMany({
-        where: {
+      // Parallelize student stats, timetable slots, and pending homework count
+      const [attendanceStats, timetable, homeworkCount] = await Promise.all([
+        attendanceService.getStudentAttendanceStats(
           schoolId,
-          classId,
-          sectionId,
-          dayOfWeek: todayDayOfWeek,
-        },
-        include: {
-          subject: true,
-          faculty: true,
-        },
-        orderBy: { startTime: "asc" },
-      });
-
-      // Pending homework count
-      const homeworkCount = await prisma.homework.count({
-        where: {
-          schoolId,
-          classId,
-          sectionId,
-          dueDate: { gte: new Date() },
-          submissions: {
-            none: { studentId: student.id },
-          },
-        },
-      });
+          student.id,
+        ),
+        classId && sectionId
+          ? prisma.timetable.findMany({
+              where: {
+                schoolId,
+                classId,
+                sectionId,
+                dayOfWeek: todayDayOfWeek,
+              },
+              include: {
+                subject: true,
+                faculty: true,
+              },
+              orderBy: { startTime: "asc" },
+            })
+          : Promise.resolve([]),
+        classId && sectionId
+          ? prisma.homework.count({
+              where: {
+                schoolId,
+                classId,
+                sectionId,
+                dueDate: { gte: new Date() },
+                submissions: {
+                  none: { studentId: student.id },
+                },
+              },
+            })
+          : Promise.resolve(0),
+      ]);
 
       return ApiResponse.success({
         role,
@@ -195,9 +224,9 @@ export async function GET(req: NextRequest) {
           attendanceRate: `${attendanceStats.percentage.toFixed(1)}%`,
           pendingTasks: `${homeworkCount} Task${homeworkCount !== 1 ? "s" : ""}`,
         },
-        timetable: timetable.map((t) => ({
+        timetable: timetable.map((t: any) => ({
           time: `${t.startTime} - ${t.endTime}`,
-          subject: t.subject.name,
+          subject: t.subject?.name ?? "Subject",
           room: t.room || "Room 101",
         })),
         recentNotices,
