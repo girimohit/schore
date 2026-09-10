@@ -3,6 +3,10 @@ import { prisma } from "@schore/database";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { NotificationService } from "./notification.service";
+import {
+  invalidateSchoolEntitlementCache,
+  getCachedSchoolEntitlement,
+} from "../utils/entitlements";
 
 export class SchoolService {
   private schoolRepository = new SchoolRepository();
@@ -363,10 +367,12 @@ export class SchoolService {
       timetable?: boolean;
     },
   ) {
-    return prisma.schoolFeatures.update({
+    const updated = await prisma.schoolFeatures.update({
       where: { schoolId },
       data,
     });
+    invalidateSchoolEntitlementCache(schoolId);
+    return updated;
   }
 
   async checkFeatureEntitlement(
@@ -379,12 +385,14 @@ export class SchoolService {
       | "remarks"
       | "timetable",
   ): Promise<boolean> {
-    const config = await prisma.schoolFeatures.findUnique({
-      where: { schoolId },
-    });
-    if (!config) {
+    try {
+      const entitlement = await getCachedSchoolEntitlement(schoolId);
+      if (!entitlement.features) {
+        return true;
+      }
+      return !!entitlement.features[feature];
+    } catch {
       return true;
     }
-    return !!config[feature];
   }
 }

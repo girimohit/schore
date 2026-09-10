@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@schore/database";
 import { ApiResponse } from "../../../../src/utils/response";
 import { UserRole } from "@schore/database";
+import { invalidatePlatformConfigCache } from "../../../../src/utils/entitlements";
 
 const configSchema = z.object({
   maintenanceMode: z.boolean().optional(),
@@ -47,6 +48,8 @@ export async function PATCH(req: NextRequest) {
         },
       });
     }
+
+    invalidatePlatformConfigCache();
 
     return ApiResponse.success(
       updated,

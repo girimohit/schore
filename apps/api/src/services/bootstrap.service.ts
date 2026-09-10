@@ -1,7 +1,7 @@
 import { UserRepository } from "../repositories/user.repository";
 import { SchoolRepository } from "../repositories/school.repository";
 import { getPermissionsForRole } from "../utils/permissions";
-import { prisma } from "@schore/database";
+import { getCachedPlatformConfig } from "../utils/entitlements";
 
 export class BootstrapService {
   private userRepository = new UserRepository();
@@ -15,7 +15,7 @@ export class BootstrapService {
     const [user, school, platformConfig] = await Promise.all([
       this.userRepository.findById(userId),
       this.schoolRepository.findById(schoolId),
-      prisma.platformConfig.findFirst(),
+      getCachedPlatformConfig(),
     ]);
 
     if (!user) {
