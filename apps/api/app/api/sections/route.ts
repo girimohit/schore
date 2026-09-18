@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     const academicService = new AcademicService();
     const data = await academicService.getSections(schoolId, classId);
-    return ApiResponse.success(data, "Sections retrieved successfully");
+    return ApiResponse.cachedSuccess(data, "Sections retrieved successfully", 60);
   } catch (error: any) {
     return ApiResponse.badRequest(error.message || "Failed to load sections");
   }

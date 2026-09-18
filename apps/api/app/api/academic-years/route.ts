@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
 
     const academicService = new AcademicService();
     const data = await academicService.getAcademicYears(schoolId);
-    return ApiResponse.success(data, "Academic years retrieved successfully");
+    return ApiResponse.cachedSuccess(
+      data,
+      "Academic years retrieved successfully",
+      120,
+    );
   } catch (error: any) {
     return ApiResponse.badRequest(
       error.message || "Failed to load academic years",

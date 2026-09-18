@@ -1,16 +1,44 @@
 import { NextResponse } from "next/server";
 
 export class ApiResponse {
-  static success(data: any = null, message = "Success", status = 200) {
+  static success(
+    data: any = null,
+    message = "Success",
+    status = 200,
+    headers?: Record<string, string>,
+  ) {
     return NextResponse.json(
       {
         success: true,
         message,
         data,
       },
-      { status },
+      { status, headers },
     );
   }
+
+  static cachedSuccess(
+    data: any = null,
+    message = "Success",
+    maxAgeSeconds = 60,
+    staleWhileRevalidateSeconds = 120,
+    status = 200,
+  ) {
+    return NextResponse.json(
+      {
+        success: true,
+        message,
+        data,
+      },
+      {
+        status,
+        headers: {
+          "Cache-Control": `private, max-age=${maxAgeSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`,
+        },
+      },
+    );
+  }
+
 
   static error(
     message = "An error occurred",

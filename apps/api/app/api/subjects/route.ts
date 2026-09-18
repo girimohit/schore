@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     const academicService = new AcademicService();
     const data = await academicService.getSubjects(schoolId);
-    return ApiResponse.success(data, "Subjects retrieved successfully");
+    return ApiResponse.cachedSuccess(data, "Subjects retrieved successfully", 60);
   } catch (error: any) {
     return ApiResponse.badRequest(error.message || "Failed to load subjects");
   }
