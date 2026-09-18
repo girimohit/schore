@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/network/api_client.dart';
 import '../../shared/models/bootstrap_config.dart';
+import '../dashboard/dashboard_notifier.dart';
 
 enum BootstrapStatus { initial, loading, success, forceUpdate, error }
 
@@ -38,14 +39,15 @@ class BootstrapState {
 
 final bootstrapProvider = StateNotifierProvider<BootstrapNotifier, BootstrapState>((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return BootstrapNotifier(apiClient);
+  return BootstrapNotifier(apiClient, ref);
 });
 
 class BootstrapNotifier extends StateNotifier<BootstrapState> {
   final ApiClient _apiClient;
+  final Ref _ref;
   static const String _bootstrapCacheKey = 'bootstrap_cache';
 
-  BootstrapNotifier(this._apiClient) : super(const BootstrapState.initial());
+  BootstrapNotifier(this._apiClient, this._ref) : super(const BootstrapState.initial());
 
   Future<void> initializeBootstrap() async {
     state = state.copyWith(status: BootstrapStatus.loading);
@@ -63,6 +65,11 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
         }
 
         state = state.copyWith(status: BootstrapStatus.success, config: config);
+        
+        // Eagerly prefetch dashboard metrics in background
+        if (config.user != null) {
+          _ref.read(dashboardProvider.notifier).fetchDashboardData();
+        }
         
         // Refresh in background
         _fetchRemoteBootstrap();
@@ -93,6 +100,11 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
         }
 
         state = state.copyWith(status: BootstrapStatus.success, config: config);
+
+        // Eagerly prefetch dashboard metrics if user is authenticated
+        if (config.user != null) {
+          _ref.read(dashboardProvider.notifier).fetchDashboardData();
+        }
       } else {
         if (state.config == null) {
           state = state.copyWith(
@@ -114,6 +126,8 @@ class BootstrapNotifier extends StateNotifier<BootstrapState> {
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_bootstrapCacheKey);
+    _ref.read(dashboardProvider.notifier).clear();
     state = const BootstrapState.initial();
   }
 }
+

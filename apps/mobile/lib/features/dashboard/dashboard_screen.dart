@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../features/bootstrap/bootstrap_notifier.dart';
+import '../../features/dashboard/dashboard_notifier.dart';
 import '../../shared/widgets/app_navigation_drawer.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/theme/radius.dart';
@@ -17,50 +18,29 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  bool _isLoading = true;
-  String? _errorMessage;
-  Map<String, dynamic> _stats = {};
-  List<dynamic> _timetable = [];
-  List<dynamic> _notices = [];
   DateTime? _lastPressedAt;
+
+  Map<String, dynamic> get _stats =>
+      ref.watch(dashboardProvider).data?.stats ?? const {};
+  List<dynamic> get _timetable =>
+      ref.watch(dashboardProvider).data?.timetable ?? const [];
+  List<dynamic> get _notices =>
+      ref.watch(dashboardProvider).data?.notices ?? const [];
+  bool get _isLoading =>
+      ref.watch(dashboardProvider).isLoading &&
+      ref.watch(dashboardProvider).data == null;
+  String? get _errorMessage => ref.watch(dashboardProvider).errorMessage;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _fetchDashboardData());
+    Future.microtask(() => ref.read(dashboardProvider.notifier).fetchDashboardData());
   }
 
   Future<void> _fetchDashboardData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final apiClient = ref.read(apiClientProvider);
-      final response = await apiClient.dio.get('/api/school/metrics');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] ?? {};
-        setState(() {
-          _stats = data['stats'] ?? {};
-          _timetable = data['timetable'] ?? [];
-          _notices = data['recentNotices'] ?? [];
-        });
-      } else {
-        setState(() {
-          _errorMessage = response.data['message'] ?? 'Failed to load dashboard metrics';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Could not retrieve live dashboard stats. Please try again.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    await ref.read(dashboardProvider.notifier).fetchDashboardData(forceRefresh: true);
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -9,4 +9,10 @@
   - `init()` loads tokens once from encrypted disk into RAM.
   - `getAccessToken()` serves synchronously from memory after first boot.
   - `saveTokens()` immediately updates RAM cache while persisting to disk via `Future.wait`.
-  - `clearTokens()` wipes memory and disk in parallel.
+### 2. Dashboard Metrics Background Prefetching (Mobile)
+- **What Changed**: Created `DashboardNotifier` Riverpod provider to manage metrics state, triggered background prefetch in `BootstrapNotifier` when auth session is resolved, and connected `DashboardScreen` to consume prefetched data instantly.
+- **Why**: Eliminates sequential waterfall delays (Bootstrap -> Navigation -> Metrics Loading Spinner).
+- **Under the Hood**:
+  - `BootstrapNotifier` fires `/api/school/metrics` concurrently during app startup/login.
+  - When `DashboardScreen` mounts, data is already populated in Riverpod state, allowing 0ms immediate UI rendering.
+  - Background revalidation occurs silently without blocking the user interface.
