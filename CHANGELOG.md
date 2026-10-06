@@ -28,3 +28,10 @@
 - **What Changed**: Added `POST /api/upload` endpoint for authenticated multipart file uploads (supporting PDFs, images, and documents up to 15MB) and updated `homework.service.ts` and `notice.service.ts` validation schemas to permit relative upload paths (`/uploads/...`).
 - **Why**: Powers homework attachments, student submission attachments, and notice documents.
 
+### 5. HTTP Payload Compression & Prisma Query Projection Optimization (Backend)
+- **What Changed**:
+  - Enabled `compress: true` in `next.config.js` to serve responses with Gzip/Brotli compression, shrinking payload sizes over network transfers by 70–80%.
+  - Refactored `AcademicRepository`, `StudentRepository`, and `NoticeRepository` to replace heavy table `include` joins with selective `select` projections for related entities (`class`, `section`, `subject`).
+- **Why**: Eliminates over-fetching unneeded database columns and relational metadata, drastically speeding up PostgreSQL query execution and Node.js JSON serialization.
+
+

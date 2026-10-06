@@ -60,8 +60,8 @@ export class NoticeRepository {
     return prisma.notice.findFirst({
       where: { id, schoolId },
       include: {
-        class: true,
-        section: true,
+        class: { select: { id: true, name: true, code: true } },
+        section: { select: { id: true, name: true } },
       },
     });
   }
@@ -81,11 +81,16 @@ export class NoticeRepository {
       OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
     };
 
+    const includeRelations = {
+      class: { select: { id: true, name: true, code: true } },
+      section: { select: { id: true, name: true } },
+    };
+
     // Admins see all notices
     if (options.role === "SUPER_ADMIN" || options.role === "SCHOOL_ADMIN") {
       return prisma.notice.findMany({
         where: { schoolId },
-        include: { class: true, section: true },
+        include: includeRelations,
         orderBy: { publishedAt: "desc" },
       });
     }
@@ -101,7 +106,7 @@ export class NoticeRepository {
             { audience: NoticeAudience.FACULTY },
           ],
         },
-        include: { class: true, section: true },
+        include: includeRelations,
         orderBy: { publishedAt: "desc" },
       });
     }
@@ -129,7 +134,7 @@ export class NoticeRepository {
             },
           ],
         },
-        include: { class: true, section: true },
+        include: includeRelations,
         orderBy: { publishedAt: "desc" },
       });
     }

@@ -67,11 +67,31 @@ export class AcademicRepository {
     return prisma.class.findMany({
       where: { schoolId },
       orderBy: { sortOrder: "asc" },
-      include: {
-        sections: true,
+      select: {
+        id: true,
+        schoolId: true,
+        name: true,
+        code: true,
+        sortOrder: true,
+        sections: {
+          select: {
+            id: true,
+            name: true,
+            classId: true,
+          },
+          orderBy: { name: "asc" },
+        },
         subjects: {
-          include: {
-            subject: true,
+          select: {
+            id: true,
+            subjectId: true,
+            subject: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
           },
         },
       },

@@ -170,8 +170,12 @@ export class StudentRepository {
           enrollments: {
             where: { status: "ACTIVE" },
             include: {
-              class: true,
-              section: true,
+              class: {
+                select: { id: true, name: true, code: true },
+              },
+              section: {
+                select: { id: true, name: true },
+              },
             },
           },
         },
@@ -240,8 +244,12 @@ export class StudentRepository {
           enrollments: {
             where: { status: "ACTIVE" },
             include: {
-              class: true,
-              section: true,
+              class: {
+                select: { id: true, name: true, code: true },
+              },
+              section: {
+                select: { id: true, name: true },
+              },
             },
           },
         },
