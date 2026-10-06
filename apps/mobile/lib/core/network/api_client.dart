@@ -13,6 +13,7 @@ class ApiClient {
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 15),
         )) {
+    dio.interceptors.add(HttpCacheInterceptor());
     dio.interceptors.add(DeduplicationInterceptor());
     _initializeInterceptors();
   }
@@ -156,3 +157,96 @@ class DeduplicationInterceptor extends Interceptor {
     handler.next(err);
   }
 }
+
+class CachedResponse {
+  final Response response;
+  final DateTime timestamp;
+  final Duration ttl;
+
+  CachedResponse({
+    required this.response,
+    required this.timestamp,
+    required this.ttl,
+  });
+
+  bool get isExpired => DateTime.now().isAfter(timestamp.add(ttl));
+}
+
+class HttpCacheInterceptor extends Interceptor {
+  static final Map<String, CachedResponse> _cache = {};
+
+  static void clear() {
+    _cache.clear();
+  }
+
+  static void invalidatePrefix(String prefix) {
+    _cache.removeWhere((key, _) => key.contains(prefix));
+  }
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.method != 'GET') {
+      // Invalidate related caches on mutations (POST, PUT, DELETE, PATCH)
+      final path = options.path;
+      invalidatePrefix(path);
+      return handler.next(options);
+    }
+
+    final noCache = options.extra['no-cache'] == true ||
+        options.headers['Cache-Control'] == 'no-cache';
+    if (noCache) {
+      return handler.next(options);
+    }
+
+    final key =
+        '${options.uri.toString()}?${options.queryParameters.toString()}';
+    final cached = _cache[key];
+
+    if (cached != null && !cached.isExpired) {
+      // Return fresh copy of cached response without network roundtrip
+      return handler.resolve(
+        Response(
+          requestOptions: options,
+          data: cached.response.data,
+          statusCode: cached.response.statusCode,
+          statusMessage: cached.response.statusMessage,
+          headers: cached.response.headers,
+          isRedirect: cached.response.isRedirect,
+          redirects: cached.response.redirects,
+          extra: {'from_cache': true},
+        ),
+      );
+    }
+
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.requestOptions.method == 'GET' && response.statusCode == 200) {
+      final cacheControl = response.headers.value('cache-control') ?? '';
+
+      if (!cacheControl.contains('no-store') &&
+          !cacheControl.contains('no-cache')) {
+        int maxAgeSeconds = 30; // default 30s
+        final match = RegExp(r'max-age=(\d+)').firstMatch(cacheControl);
+        if (match != null) {
+          maxAgeSeconds = int.tryParse(match.group(1) ?? '30') ?? 30;
+        }
+
+        if (maxAgeSeconds > 0) {
+          final key =
+              '${response.requestOptions.uri.toString()}?${response.requestOptions.queryParameters.toString()}';
+          _cache[key] = CachedResponse(
+            response: response,
+            timestamp: DateTime.now(),
+            ttl: Duration(seconds: maxAgeSeconds),
+          );
+        }
+      }
+    }
+
+    handler.next(response);
+  }
+}
+

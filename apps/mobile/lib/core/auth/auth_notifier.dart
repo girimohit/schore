@@ -79,6 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Ignore network failures on logout and clear locally
     } finally {
       await _secureStorage.clearTokens();
+      HttpCacheInterceptor.clear();
       state = state.copyWith(status: AuthStatus.unauthenticated, accessToken: null);
     }
   }
