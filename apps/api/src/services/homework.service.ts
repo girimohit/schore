@@ -11,7 +11,7 @@ export const createHomeworkSchema = z.object({
   subjectId: z.string().min(1, "Subject ID is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  attachmentUrl: z.string().url().optional().or(z.literal("")),
+  attachmentUrl: z.string().optional().or(z.literal("")),
   dueDate: z.coerce.date(),
   academicYearId: z.string().optional(),
 });
@@ -19,12 +19,12 @@ export const createHomeworkSchema = z.object({
 export const updateHomeworkSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
-  attachmentUrl: z.string().url().optional().or(z.literal("")),
+  attachmentUrl: z.string().optional().or(z.literal("")),
   dueDate: z.coerce.date().optional(),
 });
 
 export const submitHomeworkSchema = z.object({
-  contentUrl: z.string().url("Valid submission content URL is required"),
+  contentUrl: z.string().min(1, "Valid submission content URL or file path is required"),
 });
 
 export const reviewSubmissionSchema = z.object({

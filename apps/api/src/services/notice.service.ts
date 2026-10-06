@@ -13,7 +13,7 @@ export const createNoticeSchema = z.object({
   classId: z.string().optional(),
   sectionId: z.string().optional(),
   expiresAt: z.coerce.date().optional(),
-  attachmentUrl: z.string().url().optional().or(z.literal("")),
+  attachmentUrl: z.string().optional().or(z.literal("")),
 });
 
 export const updateNoticeSchema = z.object({
@@ -23,7 +23,7 @@ export const updateNoticeSchema = z.object({
   classId: z.string().optional(),
   sectionId: z.string().optional(),
   expiresAt: z.coerce.date().optional(),
-  attachmentUrl: z.string().url().optional().or(z.literal("")),
+  attachmentUrl: z.string().optional().or(z.literal("")),
 });
 
 export class NoticeService {

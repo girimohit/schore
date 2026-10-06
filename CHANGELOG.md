@@ -23,3 +23,8 @@
 - **Under the Hood**:
   - Sets standard HTTP `Cache-Control` response headers.
   - Scoped to `private` to safeguard multi-tenant data while enabling browser/client caching for 60-120 seconds.
+
+### 4. File Upload API & Attachment Support (Backend)
+- **What Changed**: Added `POST /api/upload` endpoint for authenticated multipart file uploads (supporting PDFs, images, and documents up to 15MB) and updated `homework.service.ts` and `notice.service.ts` validation schemas to permit relative upload paths (`/uploads/...`).
+- **Why**: Powers homework attachments, student submission attachments, and notice documents.
+
